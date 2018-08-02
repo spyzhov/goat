@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/codegangsta/cli"
 	"github.com/spyzhov/goat/action"
 	"log"
@@ -14,12 +13,10 @@ func main() {
 	app.Description = "golang: application template"
 	app.Version = "0.0.1"
 	app.Before = func(context *cli.Context) error {
-		fmt.Println("before")
 		return nil
 	}
 	app.Action = func(c *cli.Context) error {
 		a := action.New(c)
-
 		return a.Invoke()
 	}
 	app.EnableBashCompletion = true
