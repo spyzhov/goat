@@ -5,7 +5,7 @@ import "github.com/spyzhov/goat/templates"
 var Env []templates.Environment
 var Props []templates.Property
 var Libs = []templates.Library{
-	{Name: "github.com/go-pg/migrations"},
+	{Name: "{{.Repo}}/migrations"},
 }
 var Models = map[string]string{}
 

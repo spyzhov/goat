@@ -52,6 +52,8 @@ type Context struct {
 	MdCode         string
 }
 
+type TemplateResponse string
+
 func New(c *cli.Context) *Action {
 	var (
 		err    error
@@ -128,7 +130,7 @@ func (a *Action) Invoke() (err error) {
 		Env:            a.getEnv(),
 		Name:           a.Name,
 		Repo:           a.Repo,
-		Repos:          a.getLibs(),
+		Repos:          render("repos", a.getLibs(), a),
 		Runners:        a.getRunners(),
 		Setter:         a.getSetter(),
 		SetterFunction: a.getSetterFunction(),
@@ -162,6 +164,14 @@ func (a *Action) Invoke() (err error) {
 	return
 }
 
+func render(name, tpl string, obj interface{}) string {
+	result := new(TemplateResponse)
+	if err := template.Must(template.New(name).Parse(tpl)).Execute(result, obj); err != nil {
+		log.Fatal(err)
+	}
+	return string(*result)
+}
+
 func join(parts []string, sep string) (result string) {
 	for _, part := range parts {
 		if part != "" {
@@ -186,6 +196,11 @@ func joinMap(parts map[string]string, sep string) (result string) {
 		return result[l:]
 	}
 	return
+}
+
+func (t *TemplateResponse) Write(p []byte) (n int, err error) {
+	*t += TemplateResponse(p)
+	return len(*t), nil
 }
 
 func (a *Action) getConfig() *Config {
