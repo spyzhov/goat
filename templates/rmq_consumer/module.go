@@ -107,7 +107,7 @@ func (a *Application) RunConsumer(consumer *RabbitMq, queue string) (err error) 
 			case msg := <-msgs:
 				a.Logger.Debug("income message", zap.ByteString("message", msg.Body))
 				if len(msg.Body) > 0 {
-					go a.handle(&msg)
+					go a.consumerHandle(&msg)
 				}
 			}
 		}
@@ -116,7 +116,7 @@ func (a *Application) RunConsumer(consumer *RabbitMq, queue string) (err error) 
 	return nil
 }
 
-func (a *Application) handle(msg *amqp.Delivery) {
+func (a *Application) consumerHandle(msg *amqp.Delivery) {
 	//TODO: Implement me
 	msg.Ack(false)
 }
