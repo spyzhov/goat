@@ -35,7 +35,7 @@ func (a *Application) RunHttp() error {
 }
 
 func (a *Application) httpGetMain(c echo.Context) (err error) {
-	return c.JSON(http.StatusOK, map[string]interface{}{"success": true})
+	return c.HTML(http.StatusNotImplemented, "")
 }
 `,
 }
