@@ -15,13 +15,13 @@ var Libs = []templates.Library{
 var Models = map[string]string{}
 
 var TemplateSetter = `
-	if err = app.setDataBase(app.Db); err != nil {
+	if err = app.setDataBase(&app.Db); err != nil {
 		logger.Fatal("cannot connect to Postgres", zap.Error(err))
 		return nil, err
 	}`
 var TemplateSetterFunction = `
 // PG connect
-func (a *Application) setDataBase(db *pg.DB) error {
+func (a *Application) setDataBase(db **pg.DB) error {
 	a.Logger.Debug("PG connect", zap.String("connect", a.Config.DbConnect))
 
 	options, err := pg.ParseURL(a.Config.DbConnect)
@@ -29,11 +29,11 @@ func (a *Application) setDataBase(db *pg.DB) error {
 		return err
 	}
 
-	db = pg.Connect(options)
+	*db = pg.Connect(options)
 
 	if a.Config.Debug {
 		a.Logger.Debug("Used debug mode for database queries")
-		db.OnQueryProcessed(func(event *pg.QueryProcessedEvent) {
+		(*db).OnQueryProcessed(func(event *pg.QueryProcessedEvent) {
 			query, err := event.FormattedQuery()
 			if err != nil {
 				panic(err)

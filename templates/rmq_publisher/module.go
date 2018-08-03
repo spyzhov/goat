@@ -24,27 +24,27 @@ type RabbitMq struct {
 }
 
 var TemplateSetter = `
-	if err = app.setPublisher(app.Publisher, app.Config.PublisherAddress); err != nil {
+	if err = app.setPublisher(&app.Publisher, app.Config.PublisherAddress); err != nil {
 		logger.Fatal("cannot connect to publisher RabbitMQ", zap.Error(err))
 		return nil, err
 	}`
 var TemplateSetterFunction = `
 // RMQ set publisher
-func (a *Application) setPublisher(publisher *RabbitMq, address string) (err error) {
+func (a *Application) setPublisher(publisher **RabbitMq, address string) (err error) {
 	a.Logger.Debug("RabbitMQ publisher connect", zap.String("address", address))
-	publisher.Connection, err = amqp.Dial(address)
+	(*publisher).Connection, err = amqp.Dial(address)
 	if err != nil {
 		return err
 	}
 
-	publisher.Channel, err = publisher.Connection.Channel()
+	(*publisher).Channel, err = (*publisher).Connection.Channel()
 	if err != nil {
 		return err
 	}
 
 	// OnClose
 	cerr := make(chan *amqp.Error)
-	publisher.Channel.NotifyClose(cerr)
+	(*publisher).Channel.NotifyClose(cerr)
 	go func() {
 		a.Error <- errors.New((<-cerr).Error())
 		close(cerr)

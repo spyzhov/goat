@@ -16,22 +16,22 @@ var Libs = []templates.Library{
 var Models = map[string]string{}
 
 var TemplateSetter = `
-	if err = app.setBabex(app.Service); err != nil {
+	if err = app.setBabex(); err != nil {
 		logger.Fatal("cannot create Babex node", zap.Error(err))
 		return nil, err
 	}`
 var TemplateSetterFunction = `
 // Babex node connect
-func (a *Application) setBabex(service *babex.Service) (err error) {
+func (a *Application) setBabex() (err error) {
 	a.Logger.Debug("Babex connect", zap.String("address", a.Config.BabexAddr))
-	service, err = babex.NewService(&babex.ServiceConfig{
+	app.Service, err = babex.NewService(&babex.ServiceConfig{
 		Name:    a.Config.BabexName,
 		Address: a.Config.BabexAddr,
 	})
 	if err != nil {
 		return err
 	}
-	err = service.BindToExchange(a.Config.BabexExchange, a.Config.BabexName)
+	err = app.Service.BindToExchange(a.Config.BabexExchange, a.Config.BabexName)
 	if err != nil {
 		return err
 	}
