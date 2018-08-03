@@ -44,7 +44,6 @@ func (a *Application) setDataBase(db *pg.DB) error {
 		})
 	}
 	return nil
-}
-`
+}`
 var TemplateRunFunction = ""
 var Templates = map[string]string{}

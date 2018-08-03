@@ -20,8 +20,7 @@ func (a *Application) setMigrationsUp() error {
 	a.Logger.Debug("PG migrate")
 	migrations.Init(a.Db, a.Logger)
 	return nil
-}
-`
+}`
 var TemplateRunFunction = ""
 var Templates = map[string]string{
 	"migrations/migrations.go": `package migrations
