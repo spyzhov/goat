@@ -44,7 +44,7 @@ func main() {
 		application *app.Application
 		err         error
 	)
-	if application, err = app.NewApp(); err != nil {
+	if application, err = app.New(); err != nil {
 		application.Logger.Fatal("service init error", zap.Error(err))
 	}
 
@@ -108,7 +108,7 @@ type Application struct {
 }
 {{.Models}}
 
-func NewApp() (*Application, error) {
+func New() (*Application, error) {
 	config, err := NewConfig()
 	logger, _ := NewLogger(config.Level)
 	if err != nil {
