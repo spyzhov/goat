@@ -10,8 +10,13 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "Goat"
+	app.HelpName = "Goat is golang application template generator"
+	app.Usage = "goat"
 	app.Description = "golang: application template"
-	app.Version = "0.0.1"
+	app.Version = "0.0.2"
+	app.Authors = []cli.Author{
+		{Name: "S.Pyzhov", Email: "turin.tomsk@gmail.com"},
+	}
 	app.Before = func(context *cli.Context) error {
 		return nil
 	}

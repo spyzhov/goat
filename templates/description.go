@@ -143,4 +143,31 @@ func WaitExit() chan os.Signal {
 }
 
 `,
+	"Dockerfile": `FROM golang:1.10 as builder
+
+WORKDIR /go/src/{{.Repo}}
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o {{.Name}} .
+
+FROM scratch
+
+EXPOSE 4000
+
+WORKDIR /root/
+COPY --from=builder /go/src/{{.Repo}} .
+CMD ["./{{.Name}}"]
+`,
+	"README.md": `# About
+
+TODO
+
+## Config [ENV]
+{{.MdCode}}go
+type Config struct {
+{{.Env}}
+}
+{{.MdCode}}
+`,
 }

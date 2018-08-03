@@ -6,8 +6,10 @@ import (
 	"github.com/spyzhov/goat/console"
 	"github.com/spyzhov/goat/templates"
 	"github.com/spyzhov/goat/templates/babex"
+	"github.com/spyzhov/goat/templates/http"
 	"github.com/spyzhov/goat/templates/migrations"
 	"github.com/spyzhov/goat/templates/postgres"
+	"github.com/spyzhov/goat/templates/prometheus"
 	"github.com/spyzhov/goat/templates/rmq_consumer"
 	"github.com/spyzhov/goat/templates/rmq_publisher"
 	"log"
@@ -15,8 +17,6 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
-	"github.com/spyzhov/goat/templates/prometheus"
-	"github.com/spyzhov/goat/templates/http"
 )
 
 type Action struct {
@@ -34,8 +34,8 @@ type Config struct {
 	Migrations      bool
 	RabbitConsumer  bool
 	RabbitPublisher bool
-	Prometheus		bool
-	Http			bool
+	Prometheus      bool
+	Http            bool
 }
 
 type Context struct {
@@ -49,6 +49,7 @@ type Context struct {
 	Props          string
 	PropsValue     string
 	Models         string
+	MdCode         string
 }
 
 func New(c *cli.Context) *Action {
@@ -62,7 +63,7 @@ func New(c *cli.Context) *Action {
 	// region Debug
 	if c.Bool("debug") {
 		a.log = func(format string, v ...interface{}) {
-			log.Printf(format + "\n", v...)
+			log.Printf(format+"\n", v...)
 		}
 	} else {
 		a.log = func(format string, v ...interface{}) {}
@@ -80,6 +81,10 @@ func New(c *cli.Context) *Action {
 		if a.Path, err = filepath.Abs(a.Path); err != nil {
 			log.Fatal(err)
 		}
+		if a.Path == "" {
+			log.Fatal("Project path was not set")
+		}
+		// TODO: validate
 	}
 	a.log("use path: %s", a.Path)
 	// endregion
@@ -89,6 +94,9 @@ func New(c *cli.Context) *Action {
 	if !a.Console.PromptY("Project name [%s]?", a.Name) {
 		if a.Name, err = a.Console.Scanln("Enter correct name: "); err != nil {
 			log.Fatal(err)
+		}
+		if a.Name == "" {
+			log.Fatal("Project name was not set")
 		}
 		// TODO: validate
 	}
@@ -100,8 +108,11 @@ func New(c *cli.Context) *Action {
 	}
 	a.log("found repository name: %s", a.Repo)
 	if a.Repo != "" && !a.Console.PromptY("Repository name [%s]?", a.Repo) {
-		if a.Name, err = a.Console.Scanln("Enter correct repository name: "); err != nil {
+		if a.Repo, err = a.Console.Scanln("Enter correct repository name: "); err != nil {
 			log.Fatal(err)
+		}
+		if a.Repo == "" {
+			log.Fatal("Repository name was not set")
 		}
 		// TODO: validate
 	}
@@ -124,6 +135,7 @@ func (a *Action) Invoke() (err error) {
 		Props:          a.getProps(),
 		PropsValue:     a.getPropsValue(),
 		Models:         a.getModels(),
+		MdCode:         "```",
 	}
 	files := make(map[string]*template.Template)
 	for name, content := range a.getFiles() {
@@ -360,9 +372,9 @@ func (a *Action) getPropsValue() string {
 func (a *Action) getLibs() string {
 	a.log("lib: start")
 	var (
-		parts   = map[string]string{}
-		lib     []templates.Library
-		l       templates.Library
+		parts = map[string]string{}
+		lib   []templates.Library
+		l     templates.Library
 	)
 	lib = append(lib, templates.Libs...)
 	if a.Config.Babex {
@@ -514,7 +526,7 @@ func (a *Action) getSetterFunction() string {
 func (a *Action) getModels() string {
 	a.log("models: start")
 	var (
-		parts  = make(map[string]string)
+		parts = make(map[string]string)
 	)
 	for name, data := range templates.Models {
 		parts[name] = data
