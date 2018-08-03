@@ -13,7 +13,7 @@ func main() {
 	app.HelpName = "Goat is golang application template generator"
 	app.Usage = "goat"
 	app.Description = "golang: application template"
-	app.Version = "0.0.2"
+	app.Version = "0.0.3"
 	app.Authors = []cli.Author{
 		{Name: "S.Pyzhov", Email: "turin.tomsk@gmail.com"},
 	}

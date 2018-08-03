@@ -3,7 +3,7 @@ package rmq_publisher
 import "github.com/spyzhov/goat/templates"
 
 var Env = []templates.Environment{
-	{Name: "PublisherAddress", Type: "string", Env: "PUBLISHER_ADDR", Default: "\"amqp://guest:guest@localhost:5672\""},
+	{Name: "PublisherAddress", Type: "string", Env: "PUBLISHER_ADDR", Default: "amqp://guest:guest@localhost:5672"},
 	{Name: "PublisherExchange", Type: "string", Env: "PUBLISHER_EXCHANGE"},
 	{Name: "PublisherRoutingKey", Type: "string", Env: "PUBLISHER_ROUTING_KEY"},
 }

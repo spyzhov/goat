@@ -3,7 +3,7 @@ package rmq_consumer
 import "github.com/spyzhov/goat/templates"
 
 var Env = []templates.Environment{
-	{Name: "ConsumerAddress", Type: "string", Env: "CONSUMER_ADDR", Default: "\"amqp://guest:guest@localhost:5672\""},
+	{Name: "ConsumerAddress", Type: "string", Env: "CONSUMER_ADDR", Default: "amqp://guest:guest@localhost:5672"},
 	{Name: "ConsumerExchange", Type: "string", Env: "CONSUMER_EXCHANGE"},
 	{Name: "ConsumerQueue", Type: "string", Env: "CONSUMER_QUEUE"},
 	{Name: "ConsumerRoutingKey", Type: "string", Env: "CONSUMER_ROUTING_KEY"},

@@ -3,7 +3,7 @@ package babex
 import "github.com/spyzhov/goat/templates"
 
 var Env = []templates.Environment{
-	{Name: "BabexAddr", Type: "string", Env: "BABEX_ADDR", Default: "\"amqp://guest:guest@localhost:5672/\""},
+	{Name: "BabexAddr", Type: "string", Env: "BABEX_ADDR", Default: "amqp://guest:guest@localhost:5672/"},
 	{Name: "BabexExchange", Type: "string", Env: "BABEX_EXCHANGE"},
 	{Name: "BabexName", Type: "string", Env: "BABEX_NAME"},
 }

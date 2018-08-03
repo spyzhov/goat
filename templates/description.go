@@ -16,7 +16,7 @@ type Library struct {
 }
 
 var Env = []Environment{
-	{Name: "Level", Type: "string", Env: "LOG_LEVEL", Default: "\"info\""},
+	{Name: "Level", Type: "string", Env: "LOG_LEVEL", Default: "info"},
 	{Name: "Debug", Type: "bool", Env: "DEBUG"},
 }
 var Props = []Property{

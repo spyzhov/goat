@@ -3,7 +3,7 @@ package postgres
 import "github.com/spyzhov/goat/templates"
 
 var Env = []templates.Environment{
-	{Name: "DbConnect", Type: "string", Env: "POSTGRES_CONNECTION", Default: "\"postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable\""},
+	{Name: "DbConnect", Type: "string", Env: "POSTGRES_CONNECTION", Default: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"},
 }
 var Props = []templates.Property{
 	{Name: "Db", Type: "*pg.DB"},

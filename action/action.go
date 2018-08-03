@@ -269,7 +269,7 @@ func (a *Action) getEnv() string {
 		}
 	}
 	tpl := fmt.Sprintf("\t%%-%ds %%-%ds `env:\"%%s\"`", length[0], length[1])
-	tpld := fmt.Sprintf("\t%%-%ds %%-%ds `env:\"%%s\" envDefault:%%s`", length[0], length[1])
+	tpld := fmt.Sprintf("\t%%-%ds %%-%ds `env:\"%%s\" envDefault:\"%%s\"`", length[0], length[1])
 	for _, e = range env {
 		if e.Default != "" {
 			parts = append(parts, fmt.Sprintf(tpld, e.Name, e.Type, e.Env, e.Default))
