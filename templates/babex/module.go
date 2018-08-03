@@ -24,14 +24,14 @@ var TemplateSetterFunction = `
 // Babex node connect
 func (a *Application) setBabex() (err error) {
 	a.Logger.Debug("Babex connect", zap.String("address", a.Config.BabexAddr))
-	app.Service, err = babex.NewService(&babex.ServiceConfig{
+	a.Service, err = babex.NewService(&babex.ServiceConfig{
 		Name:    a.Config.BabexName,
 		Address: a.Config.BabexAddr,
 	})
 	if err != nil {
 		return err
 	}
-	err = app.Service.BindToExchange(a.Config.BabexExchange, a.Config.BabexName)
+	err = a.Service.BindToExchange(a.Config.BabexExchange, a.Config.BabexName)
 	if err != nil {
 		return err
 	}
