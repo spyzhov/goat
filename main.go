@@ -10,9 +10,9 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "Goat"
-	app.HelpName = "Goat is golang application template generator"
-	app.Usage = "goat"
-	app.Description = "golang: application template"
+	app.HelpName = "goat"
+	app.Usage = "golang: application template"
+	app.Description = "Goat is golang application template generator"
 	app.Version = "0.0.3"
 	app.Authors = []cli.Author{
 		{Name: "S.Pyzhov", Email: "turin.tomsk@gmail.com"},
