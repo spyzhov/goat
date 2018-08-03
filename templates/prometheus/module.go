@@ -31,7 +31,11 @@ var Templates = map[string]string{
 	"app/http.go": `package app
 
 func (a *Application) RunHttp() error {
+	a.Echo.HidePort = true
+	a.Echo.HideBanner = true
+
 	go func() {
+		a.Logger.Info("http server started on [::]:4000")
 		a.Error <- a.Echo.Start(":4000")
 	}()
 	return nil

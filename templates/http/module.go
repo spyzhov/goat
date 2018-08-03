@@ -26,9 +26,13 @@ import (
 )
 
 func (a *Application) RunHttp() error {
+	a.Echo.HidePort = true
+	a.Echo.HideBanner = true
+
 	a.Echo.GET("/", a.httpGetMain)
 
 	go func() {
+		a.Logger.Info("http server started on [::]:4000")
 		a.Error <- a.Echo.Start(":4000")
 	}()
 	return nil
