@@ -20,10 +20,13 @@ var TemplateRunFunction = `	// Run HTTP server
 var Templates = map[string]string{
 	"app/http.go": `package app
 
-import "net/http"
+import (
+	"net/http"
+	"github.com/labstack/echo"
+)
 
 func (a *Application) RunHttp() error {
-	e.GET("/", a.httpGetMain)
+	a.Echo.GET("/", a.httpGetMain)
 
 	go func() {
 		a.Error <- a.Echo.Start(":4000")
@@ -32,8 +35,7 @@ func (a *Application) RunHttp() error {
 }
 
 func (a *Application) httpGetMain(c echo.Context) (err error) {
-	return c.JSON(http.StatusOK, map[string]interface{}{"success":true})
+	return c.JSON(http.StatusOK, map[string]interface{}{"success": true})
 }
-
 `,
 }
