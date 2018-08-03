@@ -191,15 +191,15 @@ func joinMap(parts map[string]string, sep string) (result string) {
 func (a *Action) getConfig() *Config {
 	a.log("generate config")
 	conf := &Config{}
-	conf.Babex = a.Console.Prompt("Use Babex-service (github.com/matroskin13/babex)?")
 	conf.Postgres = a.Console.Prompt("Use Postgres connection (github.com/go-pg)?")
 	if conf.Postgres {
 		conf.Migrations = a.Console.PromptY("With migrations (github.com/go-pg/migrations)?")
 	}
-	conf.RabbitConsumer = a.Console.Prompt("Use RMQ-consumers (github.com/streadway/amqp)?")
-	conf.RabbitPublisher = a.Console.Prompt("Use RMQ-publishers (github.com/streadway/amqp)?")
 	conf.Http = a.Console.Prompt("Use HTTP server (github.com/labstack/echo)?")
 	conf.Prometheus = a.Console.Prompt("Use Prometheus (github.com/prometheus/client_golang)?")
+	conf.Babex = a.Console.Prompt("Use Babex-service (github.com/matroskin13/babex)?")
+	conf.RabbitConsumer = a.Console.Prompt("Use RMQ-consumers (github.com/streadway/amqp)?")
+	conf.RabbitPublisher = a.Console.Prompt("Use RMQ-publishers (github.com/streadway/amqp)?")
 	return conf
 }
 
@@ -409,7 +409,7 @@ func (a *Action) getLibs() string {
 	for _, l = range lib {
 		parts[l.Name] = l.Name
 	}
-	return "\t\"" + joinMap(parts, "\n\t\"") + "\""
+	return "\t\"" + joinMap(parts, "\"\n\t\"") + "\""
 }
 
 func (a *Action) getRunners() string {
