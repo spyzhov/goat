@@ -20,6 +20,7 @@ var TemplateSetter = `
 var TemplateSetterFunction = `
 // Set metrics
 func (a *Application) setPrometheus() error {
+	a.Logger.Debug("Prometheus registered")
 	a.Echo.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 	return nil
 }`
