@@ -39,7 +39,7 @@ func (a *Application) RunHttp() error {
 }
 
 func (a *Application) httpGetMain(c echo.Context) (err error) {
-	return c.HTML(http.StatusNotImplemented, "")
+	return c.HTML(http.StatusNotImplemented, "<h1>501 Not implemented</h1>")
 }
 `,
 }
