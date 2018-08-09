@@ -30,7 +30,7 @@ func (c *Console) Prompt(ask string, args ...interface{}) bool {
 	if err != nil {
 		panic(err)
 	}
-	return str == "y"
+	return strings.ToLower(str) == "y"
 }
 
 func (c *Console) PromptY(ask string, args ...interface{}) bool {
@@ -38,7 +38,7 @@ func (c *Console) PromptY(ask string, args ...interface{}) bool {
 	if err != nil {
 		panic(err)
 	}
-	return str != "n"
+	return strings.ToLower(str) != "n"
 }
 
 func (c *Console) PromptInt(ask string, args ...interface{}) int {
