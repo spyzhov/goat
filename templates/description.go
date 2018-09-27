@@ -33,7 +33,6 @@ var Templates = map[string]string{
 	"main.go": `package main
 
 import (
-	"os"
 	"go.uber.org/zap"
 	"{{.Repo}}/app"
 	"{{.Repo}}/signals"
@@ -55,7 +54,6 @@ func main() {
 		application.Logger.Fatal("service crashed", zap.Error(err))
 	case sig := <-signals.WaitExit():
 		application.Logger.Info("service stop", zap.Stringer("signal", sig))
-		os.Exit(0)
 	}
 }
 
@@ -143,20 +141,29 @@ func WaitExit() chan os.Signal {
 }
 
 `,
-	"Dockerfile": `FROM golang:1.10 as builder
+	"Dockerfile": `FROM alpine:latest as alpine
+RUN apk --no-cache add tzdata zip ca-certificates
+WORKDIR /usr/share/zoneinfo
+# -0 means no compression.  Needed because go's
+# tz loader doesn't handle compressed data.
+RUN zip -r -0 /zoneinfo.zip .
 
+FROM golang:1.10 AS builder
 WORKDIR /go/src/{{.Repo}}
-
-COPY . .
-
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o {{.Name}} .
+ADD . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/{{.Name}} .
 
 FROM scratch
-
+# configurations
 EXPOSE 4000
-
-WORKDIR /root/
-COPY --from=builder /go/src/{{.Repo}} .
+WORKDIR /root
+# the timezone data:
+ENV ZONEINFO /zoneinfo.zip
+COPY --from=alpine /zoneinfo.zip /
+# the tls certificates:
+COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# the main program:
+COPY --from=builder /go/bin/{{.Name}} ./{{.Name}}
 CMD ["./{{.Name}}"]
 `,
 	"README.md": `# About

@@ -5,7 +5,7 @@ Goat is `golang: application template`
 Generate template of your application, via chosen templates:
 * RabbitMQ - consumer or publisher via [https://github.com/streadway/amqp](https://github.com/streadway/amqp);
 * Postgres - database via [https://github.com/go-pg](https://github.com/go-pg);
-* Echo - http server via [https://github.com/labstack/echo](https://github.com/labstack/echo);
+* HTTP - http server via [https://golang.org/pkg/net/http/](https://golang.org/pkg/net/http/);
 * Prometheus - prometheus endpoint `GET /metrics` via [https://github.com/prometheus/client_golang](https://github.com/prometheus/client_golang);
 * Babex - babex-node for pipeline [https://github.com/matroskin13/babex](https://github.com/matroskin13/babex);
 
@@ -27,11 +27,31 @@ Project path [/go/src/github.com/spyzhov/example]? [Y/n]: y
 Project name [example]? [Y/n]: y
 Repository name [github.com/spyzhov/example]? [Y/n]: 
 Use Postgres connection (github.com/go-pg)? [y/N]: y 
-Use HTTP server (github.com/labstack/echo)? [y/N]: y
+Use HTTP server (net/http)? [y/N]: y
 Use Prometheus (github.com/prometheus/client_golang)? [y/N]: 
 Use Babex-service (github.com/matroskin13/babex)? [y/N]: 
 Use RMQ-consumers (github.com/streadway/amqp)? [y/N]: 
 Use RMQ-publishers (github.com/streadway/amqp)? [y/N]:
+```
+
+And you will got :
+
+```
+├── app
+│   ├── app.go
+│   ├── babex.go
+│   ├── config.go
+│   ├── consumer.go
+│   ├── http.go
+│   └── publish.go
+├── Dockerfile
+├── main.go
+├── migrations
+│   ├── 01_init.go
+│   └── migrations.go
+├── README.md
+└── signals
+    └── signals.go
 ```
 
 # Use [dep](https://github.com/golang/dep)

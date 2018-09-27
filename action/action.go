@@ -210,7 +210,7 @@ func (a *Action) getConfig() *Config {
 	if conf.Postgres {
 		conf.Migrations = a.Console.PromptY("With migrations (github.com/go-pg/migrations)?")
 	}
-	conf.Http = a.Console.Prompt("Use HTTP server (github.com/labstack/echo)?")
+	conf.Http = a.Console.Prompt("Use HTTP server (het/http)?")
 	conf.Prometheus = a.Console.Prompt("Use Prometheus (github.com/prometheus/client_golang)?")
 	conf.Babex = a.Console.Prompt("Use Babex-service (github.com/matroskin13/babex)?")
 	conf.RabbitConsumer = a.Console.Prompt("Use RMQ-consumers (github.com/streadway/amqp)?")
