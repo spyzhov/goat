@@ -3,10 +3,10 @@ package postgres
 import "github.com/spyzhov/goat/templates"
 
 var Env = []templates.Environment{
-	{Name: "DbConnect", Type: "string", Env: "POSTGRES_CONNECTION", Default: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"},
+	{Name: "PgConnect", Type: "string", Env: "POSTGRES_CONNECTION", Default: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"},
 }
 var Props = []templates.Property{
-	{Name: "Db", Type: "*pg.DB"},
+	{Name: "Postgres", Type: "*pg.DB"},
 }
 var Libs = []templates.Library{
 	{Name: "github.com/go-pg/pg"},
@@ -15,16 +15,16 @@ var Libs = []templates.Library{
 var Models = map[string]string{}
 
 var TemplateSetter = `
-	if err = app.setDataBase(&app.Db); err != nil {
+	if err = app.setDataBasePostgres(&app.Postgres); err != nil {
 		logger.Fatal("cannot connect to Postgres", zap.Error(err))
 		return nil, err
 	}`
 var TemplateSetterFunction = `
 // PG connect
-func (a *Application) setDataBase(db **pg.DB) error {
-	a.Logger.Debug("PG connect", zap.String("connect", a.Config.DbConnect))
+func (a *Application) setDataBasePostgres(db **pg.DB) error {
+	a.Logger.Debug("PG connect", zap.String("connect", a.Config.PgConnect))
 
-	options, err := pg.ParseURL(a.Config.DbConnect)
+	options, err := pg.ParseURL(a.Config.PgConnect)
 	if err != nil {
 		return err
 	}

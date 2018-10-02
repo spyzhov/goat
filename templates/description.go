@@ -12,7 +12,8 @@ type Property struct {
 	Default string
 }
 type Library struct {
-	Name string
+	Name  string
+	Alias string
 }
 
 var Env = []Environment{

@@ -18,7 +18,7 @@ var TemplateSetterFunction = `
 // PG migrations up
 func (a *Application) setMigrationsUp() error {
 	a.Logger.Debug("PG migrate")
-	migrations.Init(a.Db, a.Logger)
+	migrations.Init(a.Postgres, a.Logger)
 	return nil
 }`
 var TemplateRunFunction = ""

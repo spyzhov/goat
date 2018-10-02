@@ -32,6 +32,8 @@ type Config struct {
 	Babex           bool
 	Postgres        bool
 	PgMigrations    bool
+	MySQL           bool
+	MyMigrations    bool
 	RabbitConsumer  bool
 	RabbitPublisher bool
 	Prometheus      bool
@@ -210,6 +212,10 @@ func (a *Action) getConfig() *Config {
 	if conf.Postgres {
 		conf.PgMigrations = a.Console.PromptY("With postgres migrations (github.com/go-pg/migrations)?")
 	}
+	conf.MySQL = a.Console.Prompt("Use MySQL connection (github.com/go-sql-driver/mysql)?")
+	//if conf.MySQL {
+	//	conf.MyMigrations = a.Console.PromptY("With MySQL migrations (github.com/rubenv/sql-migrate)?")
+	//}
 	conf.Http = a.Console.Prompt("Use HTTP server (het/http)?")
 	conf.Prometheus = a.Console.Prompt("Use Prometheus (github.com/prometheus/client_golang)?")
 	//fixme conf.Babex = a.Console.Prompt("Use Babex-service (github.com/matroskin13/babex)?")
@@ -422,9 +428,13 @@ func (a *Action) getLibs() string {
 	}
 
 	for _, l = range lib {
-		parts[l.Name] = l.Name
+		if l.Alias != "" {
+			parts[l.Name] = l.Alias + ` "` + l.Name + `"`
+		} else {
+			parts[l.Name] = `"` + l.Name + `"`
+		}
 	}
-	return "\t\"" + joinMap(parts, "\"\n\t\"") + "\""
+	return "\t" + joinMap(parts, "\n\t")
 }
 
 func (a *Action) getRunners() string {
