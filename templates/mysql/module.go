@@ -25,7 +25,7 @@ var TemplateSetterFunction = `
 // MySQL connect
 func (a *Application) setDataBaseMySQL(db **sql.DB) (err error) {
 	a.Logger.Debug("MySQL connect", zap.String("connect", a.Config.MySQLConnect))
-	*db, err = sql.Open("mysql", a.Config.MySQLConnection)
+	*db, err = sql.Open("mysql", a.Config.MySQLConnect)
 	if err != nil {
 		return
 	}
