@@ -46,8 +46,10 @@ func (a *Application) setPublisher(publisher **RabbitMq, address string) (err er
 	cerr := make(chan *amqp.Error)
 	(*publisher).Channel.NotifyClose(cerr)
 	go func() {
-		a.Error <- errors.New((<-cerr).Error())
-		close(cerr)
+		err, ok := <-cerr
+		if ok {
+			a.Error <- errors.New(err.Error())
+		}
 	}()
 
 	return nil

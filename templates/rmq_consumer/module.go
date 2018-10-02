@@ -65,8 +65,10 @@ func (a *Application) setConsumer(consumer **RabbitMq, address, exchange, queueN
 	cerr := make(chan *amqp.Error)
 	(*consumer).Channel.NotifyClose(cerr)
 	go func() {
-		a.Error <- errors.New((<-cerr).Error())
-		close(cerr)
+		err, ok := <-cerr
+		if ok {
+			a.Error <- errors.New(err.Error())
+		}
 	}()
 
 	return nil
@@ -104,10 +106,12 @@ func (a *Application) RunConsumer(consumer *RabbitMq, queue string) (err error) 
 		}()
 		for {
 			select {
-			case msg := <-msgs:
-				a.Logger.Debug("income message", zap.ByteString("message", msg.Body))
-				if len(msg.Body) > 0 {
-					go a.consumerHandle(&msg)
+			case msg, ok := <-msgs:
+				if ok {
+					a.Logger.Debug("income message", zap.ByteString("message", msg.Body))
+					if len(msg.Body) > 0 {
+						go a.consumerHandle(&msg)
+					}
 				}
 			}
 		}
