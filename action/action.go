@@ -31,7 +31,7 @@ type Action struct {
 type Config struct {
 	Babex           bool
 	Postgres        bool
-	Migrations      bool
+	PgMigrations    bool
 	RabbitConsumer  bool
 	RabbitPublisher bool
 	Prometheus      bool
@@ -208,11 +208,11 @@ func (a *Action) getConfig() *Config {
 	conf := &Config{}
 	conf.Postgres = a.Console.Prompt("Use Postgres connection (github.com/go-pg)?")
 	if conf.Postgres {
-		conf.Migrations = a.Console.PromptY("With migrations (github.com/go-pg/migrations)?")
+		conf.PgMigrations = a.Console.PromptY("With postgres migrations (github.com/go-pg/migrations)?")
 	}
 	conf.Http = a.Console.Prompt("Use HTTP server (het/http)?")
 	conf.Prometheus = a.Console.Prompt("Use Prometheus (github.com/prometheus/client_golang)?")
-	conf.Babex = a.Console.Prompt("Use Babex-service (github.com/matroskin13/babex)?")
+	//fixme conf.Babex = a.Console.Prompt("Use Babex-service (github.com/matroskin13/babex)?")
 	conf.RabbitConsumer = a.Console.Prompt("Use RMQ-consumers (github.com/streadway/amqp)?")
 	conf.RabbitPublisher = a.Console.Prompt("Use RMQ-publishers (github.com/streadway/amqp)?")
 	return conf
@@ -236,7 +236,7 @@ func (a *Action) getEnv() string {
 		a.log("env: get postgres")
 		env = append(env, postgres.Env...)
 	}
-	if a.Config.Migrations {
+	if a.Config.PgMigrations {
 		a.log("env: get migrations")
 		env = append(env, migrations.Env...)
 	}
@@ -298,7 +298,7 @@ func (a *Action) getProps() string {
 		a.log("props: get postgres")
 		props = append(props, postgres.Props...)
 	}
-	if a.Config.Migrations {
+	if a.Config.PgMigrations {
 		a.log("props: get migrations")
 		props = append(props, migrations.Props...)
 	}
@@ -351,7 +351,7 @@ func (a *Action) getPropsValue() string {
 		a.log("props: get postgres")
 		props = append(props, postgres.Props...)
 	}
-	if a.Config.Migrations {
+	if a.Config.PgMigrations {
 		a.log("props: get migrations")
 		props = append(props, migrations.Props...)
 	}
@@ -400,7 +400,7 @@ func (a *Action) getLibs() string {
 		a.log("lib: get postgres")
 		lib = append(lib, postgres.Libs...)
 	}
-	if a.Config.Migrations {
+	if a.Config.PgMigrations {
 		a.log("lib: get migrations")
 		lib = append(lib, migrations.Libs...)
 	}
@@ -440,7 +440,7 @@ func (a *Action) getRunners() string {
 		a.log("runners: add postgres")
 		parts = append(parts, postgres.TemplateRunFunction)
 	}
-	if a.Config.Migrations {
+	if a.Config.PgMigrations {
 		a.log("runners: add migrations")
 		parts = append(parts, migrations.TemplateRunFunction)
 	}
@@ -477,7 +477,7 @@ func (a *Action) getSetter() string {
 		a.log("setter: add postgres")
 		parts = append(parts, postgres.TemplateSetter)
 	}
-	if a.Config.Migrations {
+	if a.Config.PgMigrations {
 		a.log("setter: add migrations")
 		parts = append(parts, migrations.TemplateSetter)
 	}
@@ -514,7 +514,7 @@ func (a *Action) getSetterFunction() string {
 		a.log("setter-function: add postgres")
 		parts = append(parts, postgres.TemplateSetterFunction)
 	}
-	if a.Config.Migrations {
+	if a.Config.PgMigrations {
 		a.log("setter-function: add migrations")
 		parts = append(parts, migrations.TemplateSetterFunction)
 	}
@@ -558,7 +558,7 @@ func (a *Action) getModels() string {
 			parts[name] = data
 		}
 	}
-	if a.Config.Migrations {
+	if a.Config.PgMigrations {
 		a.log("models: add migrations")
 		for name, data := range migrations.Models {
 			parts[name] = data
@@ -612,7 +612,7 @@ func (a *Action) getFiles() map[string]string {
 			parts[name] = data
 		}
 	}
-	if a.Config.Migrations {
+	if a.Config.PgMigrations {
 		a.log("files: add migrations")
 		for name, data := range migrations.Templates {
 			parts[name] = data

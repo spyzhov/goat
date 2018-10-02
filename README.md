@@ -7,7 +7,6 @@ Generate template of your application, via chosen templates:
 * Postgres - database via [https://github.com/go-pg](https://github.com/go-pg);
 * HTTP - http server via [https://golang.org/pkg/net/http/](https://golang.org/pkg/net/http/);
 * Prometheus - prometheus endpoint `GET /metrics` via [https://github.com/prometheus/client_golang](https://github.com/prometheus/client_golang);
-* Babex - babex-node for pipeline [https://github.com/matroskin13/babex](https://github.com/matroskin13/babex);
 
 # Installation
 
@@ -29,7 +28,6 @@ Repository name [github.com/spyzhov/example]? [Y/n]:
 Use Postgres connection (github.com/go-pg)? [y/N]: y 
 Use HTTP server (net/http)? [y/N]: y
 Use Prometheus (github.com/prometheus/client_golang)? [y/N]: 
-Use Babex-service (github.com/matroskin13/babex)? [y/N]: 
 Use RMQ-consumers (github.com/streadway/amqp)? [y/N]: 
 Use RMQ-publishers (github.com/streadway/amqp)? [y/N]:
 ```
@@ -39,7 +37,6 @@ And you will got :
 ```
 ├── app
 │   ├── app.go
-│   ├── babex.go
 │   ├── config.go
 │   ├── consumer.go
 │   ├── http.go

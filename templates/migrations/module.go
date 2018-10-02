@@ -41,13 +41,13 @@ func Init(db *pg.DB, logger *zap.Logger) {
 	}
 
 	if newVersion != oldVersion {
-		logger.Info("Migrations: migrated", zap.Int64("old", oldVersion), zap.Int64("new", newVersion))
+		logger.Info("Postgres migrations: migrated", zap.Int64("old", oldVersion), zap.Int64("new", newVersion))
 	} else {
-		logger.Info("Migrations: version", zap.Int64("current", oldVersion))
+		logger.Info("Postgres migrations: version", zap.Int64("current", oldVersion))
 	}
 }
 `,
-	"migrations/01_init.go":`package migrations
+	"migrations/01_init.go": `package migrations
 
 import (
 	"fmt"
