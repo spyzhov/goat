@@ -177,6 +177,7 @@ TODO
 
 ## Config [ENV]
 {{.MdCode}}go
+package app
 type Config struct {
 {{.Env}}
 }
