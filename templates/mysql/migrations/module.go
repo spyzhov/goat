@@ -18,7 +18,7 @@ var TemplateSetterFunction = `
 // MySQL migrations up
 func (a *Application) migrateMySQL() error {
 	a.Logger.Debug("mySQL migrate")
-	migrations.MySQL(a.Postgres, a.Logger)
+	migrations.MySQL(a.MySQL, a.Logger)
 	return nil
 }`
 var TemplateRunFunction = ""
