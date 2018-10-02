@@ -5,6 +5,7 @@ Goat is `golang: application template`
 Generate template of your application, via chosen templates:
 * RabbitMQ - consumer or publisher via [https://github.com/streadway/amqp](https://github.com/streadway/amqp);
 * Postgres - database via [https://github.com/go-pg](https://github.com/go-pg);
+* MySQL - database via [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql);
 * HTTP - http server via [https://golang.org/pkg/net/http/](https://golang.org/pkg/net/http/);
 * Prometheus - prometheus endpoint `GET /metrics` via [https://github.com/prometheus/client_golang](https://github.com/prometheus/client_golang);
 

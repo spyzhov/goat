@@ -7,8 +7,8 @@ import (
 	"github.com/spyzhov/goat/templates"
 	"github.com/spyzhov/goat/templates/babex"
 	"github.com/spyzhov/goat/templates/http"
-	"github.com/spyzhov/goat/templates/migrations"
 	"github.com/spyzhov/goat/templates/postgres"
+	pgMigrations "github.com/spyzhov/goat/templates/postgres/migrations"
 	"github.com/spyzhov/goat/templates/prometheus"
 	"github.com/spyzhov/goat/templates/rmq_consumer"
 	"github.com/spyzhov/goat/templates/rmq_publisher"
@@ -243,8 +243,8 @@ func (a *Action) getEnv() string {
 		env = append(env, postgres.Env...)
 	}
 	if a.Config.PgMigrations {
-		a.log("env: get migrations")
-		env = append(env, migrations.Env...)
+		a.log("env: get pgMigrations")
+		env = append(env, pgMigrations.Env...)
 	}
 	if a.Config.RabbitConsumer {
 		a.log("env: get rmq_consumer")
@@ -305,8 +305,8 @@ func (a *Action) getProps() string {
 		props = append(props, postgres.Props...)
 	}
 	if a.Config.PgMigrations {
-		a.log("props: get migrations")
-		props = append(props, migrations.Props...)
+		a.log("props: get pgMigrations")
+		props = append(props, pgMigrations.Props...)
 	}
 	if a.Config.RabbitConsumer {
 		a.log("props: get rmq_consumer")
@@ -358,8 +358,8 @@ func (a *Action) getPropsValue() string {
 		props = append(props, postgres.Props...)
 	}
 	if a.Config.PgMigrations {
-		a.log("props: get migrations")
-		props = append(props, migrations.Props...)
+		a.log("props: get pgMigrations")
+		props = append(props, pgMigrations.Props...)
 	}
 	if a.Config.RabbitConsumer {
 		a.log("props: get rmq_consumer")
@@ -407,8 +407,8 @@ func (a *Action) getLibs() string {
 		lib = append(lib, postgres.Libs...)
 	}
 	if a.Config.PgMigrations {
-		a.log("lib: get migrations")
-		lib = append(lib, migrations.Libs...)
+		a.log("lib: get pgMigrations")
+		lib = append(lib, pgMigrations.Libs...)
 	}
 	if a.Config.RabbitConsumer {
 		a.log("lib: get rmq_consumer")
@@ -451,8 +451,8 @@ func (a *Action) getRunners() string {
 		parts = append(parts, postgres.TemplateRunFunction)
 	}
 	if a.Config.PgMigrations {
-		a.log("runners: add migrations")
-		parts = append(parts, migrations.TemplateRunFunction)
+		a.log("runners: add pgMigrations")
+		parts = append(parts, pgMigrations.TemplateRunFunction)
 	}
 	if a.Config.RabbitConsumer {
 		a.log("runners: add rmq_consumer")
@@ -488,8 +488,8 @@ func (a *Action) getSetter() string {
 		parts = append(parts, postgres.TemplateSetter)
 	}
 	if a.Config.PgMigrations {
-		a.log("setter: add migrations")
-		parts = append(parts, migrations.TemplateSetter)
+		a.log("setter: add pgMigrations")
+		parts = append(parts, pgMigrations.TemplateSetter)
 	}
 	if a.Config.RabbitConsumer {
 		a.log("setter: add rmq_consumer")
@@ -525,8 +525,8 @@ func (a *Action) getSetterFunction() string {
 		parts = append(parts, postgres.TemplateSetterFunction)
 	}
 	if a.Config.PgMigrations {
-		a.log("setter-function: add migrations")
-		parts = append(parts, migrations.TemplateSetterFunction)
+		a.log("setter-function: add pgMigrations")
+		parts = append(parts, pgMigrations.TemplateSetterFunction)
 	}
 	if a.Config.RabbitConsumer {
 		a.log("setter-function: add rmq_consumer")
@@ -569,8 +569,8 @@ func (a *Action) getModels() string {
 		}
 	}
 	if a.Config.PgMigrations {
-		a.log("models: add migrations")
-		for name, data := range migrations.Models {
+		a.log("models: add pgMigrations")
+		for name, data := range pgMigrations.Models {
 			parts[name] = data
 		}
 	}
@@ -623,8 +623,8 @@ func (a *Action) getFiles() map[string]string {
 		}
 	}
 	if a.Config.PgMigrations {
-		a.log("files: add migrations")
-		for name, data := range migrations.Templates {
+		a.log("files: add pgMigrations")
+		for name, data := range pgMigrations.Templates {
 			parts[name] = data
 		}
 	}
