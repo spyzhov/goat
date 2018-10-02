@@ -17,9 +17,8 @@ var TemplateSetter = `
 var TemplateSetterFunction = `
 // MySQL migrations up
 func (a *Application) migrateMySQL() error {
-	a.Logger.Debug("mySQL migrate")
-	migrations.MySQL(a.MySQL, a.Logger)
-	return nil
+	a.Logger.Debug("MySQL migrate")
+	return migrations.MySQL(a.MySQL, a.Logger)
 }`
 var TemplateRunFunction = ""
 var Templates = map[string]string{
@@ -32,7 +31,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func MySQL(db *sql.DB, logger *zap.Logger) {
+func MySQL(db *sql.DB, logger *zap.Logger) error {
 	migrate.SetTable("_{{.Name}}_migrations")
 	migrations := &migrate.PackrMigrationSource{
 		Box: packr.NewBox("./mysql"),
