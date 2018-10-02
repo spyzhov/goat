@@ -4,7 +4,7 @@ import "github.com/spyzhov/goat/templates"
 
 var Env = []templates.Environment{
 	{Name: "MySQLConnect", Type: "string", Env: "MYSQL_CONNECTION", Default: "root:password@tcp(localhost:3306)/database?parseTime=true"},
-	{Name: "MySQLMaxConnections", Type: "int", Env: "MYSQL_IDLE_CONNECTIONS", Default: "2"},
+	{Name: "MySQLIdleConnections", Type: "int", Env: "MYSQL_IDLE_CONNECTIONS", Default: "2"},
 	{Name: "MySQLMaxConnections", Type: "int", Env: "MYSQL_MAX_CONNECTIONS", Default: "2"},
 }
 var Props = []templates.Property{
