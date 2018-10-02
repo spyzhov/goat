@@ -10,20 +10,20 @@ var Libs = []templates.Library{
 var Models = map[string]string{}
 
 var TemplateSetter = `
-	if err = app.setMigrationsUp(); err != nil {
+	if err = app.migratePostgres(); err != nil {
 		logger.Fatal("cannot migrate on Postgres", zap.Error(err))
 		return nil, err
 	}`
 var TemplateSetterFunction = `
 // PG migrations up
-func (a *Application) setMigrationsUp() error {
+func (a *Application) migratePostgres() error {
 	a.Logger.Debug("PG migrate")
-	migrations.Init(a.Postgres, a.Logger)
+	migrations.Postgres(a.Postgres, a.Logger)
 	return nil
 }`
 var TemplateRunFunction = ""
 var Templates = map[string]string{
-	"migrations/migrations.go": `package migrations
+	"migrations/postgres.go": `package migrations
 
 import (
 	"github.com/go-pg/migrations"
@@ -31,7 +31,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func Init(db *pg.DB, logger *zap.Logger) {
+func Postgres(db *pg.DB, logger *zap.Logger) {
 	migrations.SetTableName("_{{.Name}}_migrations")
 
 	oldVersion, newVersion, err := migrations.Run(db, "up")

@@ -150,9 +150,13 @@ WORKDIR /usr/share/zoneinfo
 RUN zip -r -0 /zoneinfo.zip .
 
 FROM golang:1.10 AS builder
+# build via packr hard way https://github.com/gobuffalo/packr#building-a-binary-the-hard-way
+RUN go get -u github.com/gobuffalo/packr/...
 WORKDIR /go/src/{{.Repo}}
 ADD . .
+RUN packr
 RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/{{.Name}} .
+RUN packr clean
 
 FROM scratch
 # configurations

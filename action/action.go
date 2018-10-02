@@ -7,6 +7,8 @@ import (
 	"github.com/spyzhov/goat/templates"
 	"github.com/spyzhov/goat/templates/babex"
 	"github.com/spyzhov/goat/templates/http"
+	"github.com/spyzhov/goat/templates/mysql"
+	myMigrations "github.com/spyzhov/goat/templates/mysql/migrations"
 	"github.com/spyzhov/goat/templates/postgres"
 	pgMigrations "github.com/spyzhov/goat/templates/postgres/migrations"
 	"github.com/spyzhov/goat/templates/prometheus"
@@ -213,9 +215,9 @@ func (a *Action) getConfig() *Config {
 		conf.PgMigrations = a.Console.PromptY("With postgres migrations (github.com/go-pg/migrations)?")
 	}
 	conf.MySQL = a.Console.Prompt("Use MySQL connection (github.com/go-sql-driver/mysql)?")
-	//if conf.MySQL {
-	//	conf.MyMigrations = a.Console.PromptY("With MySQL migrations (github.com/rubenv/sql-migrate)?")
-	//}
+	if conf.MySQL {
+		conf.MyMigrations = a.Console.PromptY("With MySQL migrations (github.com/rubenv/sql-migrate)?")
+	}
 	conf.Http = a.Console.Prompt("Use HTTP server (het/http)?")
 	conf.Prometheus = a.Console.Prompt("Use Prometheus (github.com/prometheus/client_golang)?")
 	//fixme conf.Babex = a.Console.Prompt("Use Babex-service (github.com/matroskin13/babex)?")
@@ -245,6 +247,14 @@ func (a *Action) getEnv() string {
 	if a.Config.PgMigrations {
 		a.log("env: get pgMigrations")
 		env = append(env, pgMigrations.Env...)
+	}
+	if a.Config.MySQL {
+		a.log("env: get mysql")
+		env = append(env, mysql.Env...)
+	}
+	if a.Config.MyMigrations {
+		a.log("env: get myMigrations")
+		env = append(env, myMigrations.Env...)
 	}
 	if a.Config.RabbitConsumer {
 		a.log("env: get rmq_consumer")
@@ -308,6 +318,14 @@ func (a *Action) getProps() string {
 		a.log("props: get pgMigrations")
 		props = append(props, pgMigrations.Props...)
 	}
+	if a.Config.MySQL {
+		a.log("props: get mysql")
+		props = append(props, mysql.Props...)
+	}
+	if a.Config.MyMigrations {
+		a.log("props: get myMigrations")
+		props = append(props, myMigrations.Props...)
+	}
 	if a.Config.RabbitConsumer {
 		a.log("props: get rmq_consumer")
 		props = append(props, rmq_consumer.Props...)
@@ -361,6 +379,14 @@ func (a *Action) getPropsValue() string {
 		a.log("props: get pgMigrations")
 		props = append(props, pgMigrations.Props...)
 	}
+	if a.Config.MySQL {
+		a.log("props: get mysql")
+		props = append(props, mysql.Props...)
+	}
+	if a.Config.MyMigrations {
+		a.log("props: get myMigrations")
+		props = append(props, myMigrations.Props...)
+	}
 	if a.Config.RabbitConsumer {
 		a.log("props: get rmq_consumer")
 		props = append(props, rmq_consumer.Props...)
@@ -410,6 +436,14 @@ func (a *Action) getLibs() string {
 		a.log("lib: get pgMigrations")
 		lib = append(lib, pgMigrations.Libs...)
 	}
+	if a.Config.MySQL {
+		a.log("lib: get mysql")
+		lib = append(lib, mysql.Libs...)
+	}
+	if a.Config.MyMigrations {
+		a.log("lib: get myMigrations")
+		lib = append(lib, myMigrations.Libs...)
+	}
 	if a.Config.RabbitConsumer {
 		a.log("lib: get rmq_consumer")
 		lib = append(lib, rmq_consumer.Libs...)
@@ -454,6 +488,14 @@ func (a *Action) getRunners() string {
 		a.log("runners: add pgMigrations")
 		parts = append(parts, pgMigrations.TemplateRunFunction)
 	}
+	if a.Config.MySQL {
+		a.log("runners: add mysql")
+		parts = append(parts, mysql.TemplateRunFunction)
+	}
+	if a.Config.MyMigrations {
+		a.log("runners: add myMigrations")
+		parts = append(parts, myMigrations.TemplateRunFunction)
+	}
 	if a.Config.RabbitConsumer {
 		a.log("runners: add rmq_consumer")
 		parts = append(parts, rmq_consumer.TemplateRunFunction)
@@ -491,6 +533,14 @@ func (a *Action) getSetter() string {
 		a.log("setter: add pgMigrations")
 		parts = append(parts, pgMigrations.TemplateSetter)
 	}
+	if a.Config.MySQL {
+		a.log("setter: add mysql")
+		parts = append(parts, mysql.TemplateSetter)
+	}
+	if a.Config.MyMigrations {
+		a.log("setter: add myMigrations")
+		parts = append(parts, myMigrations.TemplateSetter)
+	}
 	if a.Config.RabbitConsumer {
 		a.log("setter: add rmq_consumer")
 		parts = append(parts, rmq_consumer.TemplateSetter)
@@ -527,6 +577,14 @@ func (a *Action) getSetterFunction() string {
 	if a.Config.PgMigrations {
 		a.log("setter-function: add pgMigrations")
 		parts = append(parts, pgMigrations.TemplateSetterFunction)
+	}
+	if a.Config.MySQL {
+		a.log("setter-function: add mysql")
+		parts = append(parts, mysql.TemplateSetterFunction)
+	}
+	if a.Config.MyMigrations {
+		a.log("setter-function: add myMigrations")
+		parts = append(parts, myMigrations.TemplateSetterFunction)
 	}
 	if a.Config.RabbitConsumer {
 		a.log("setter-function: add rmq_consumer")
@@ -571,6 +629,18 @@ func (a *Action) getModels() string {
 	if a.Config.PgMigrations {
 		a.log("models: add pgMigrations")
 		for name, data := range pgMigrations.Models {
+			parts[name] = data
+		}
+	}
+	if a.Config.MySQL {
+		a.log("models: add mysql")
+		for name, data := range mysql.Models {
+			parts[name] = data
+		}
+	}
+	if a.Config.MyMigrations {
+		a.log("models: add myMigrations")
+		for name, data := range myMigrations.Models {
 			parts[name] = data
 		}
 	}
@@ -625,6 +695,18 @@ func (a *Action) getFiles() map[string]string {
 	if a.Config.PgMigrations {
 		a.log("files: add pgMigrations")
 		for name, data := range pgMigrations.Templates {
+			parts[name] = data
+		}
+	}
+	if a.Config.MySQL {
+		a.log("files: add mysql")
+		for name, data := range mysql.Templates {
+			parts[name] = data
+		}
+	}
+	if a.Config.MyMigrations {
+		a.log("files: add myMigrations")
+		for name, data := range myMigrations.Templates {
 			parts[name] = data
 		}
 	}
