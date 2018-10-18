@@ -45,7 +45,7 @@ func main() {
 		err         error
 	)
 	if application, err = app.New(); err != nil {
-		application.Logger.Fatal("service init error", zap.Error(err))
+		panic(err)
 	}
 
 {{.Runners}}
