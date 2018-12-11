@@ -2,7 +2,6 @@ package action
 
 import (
 	"fmt"
-	"github.com/codegangsta/cli"
 	"github.com/spyzhov/goat/console"
 	"github.com/spyzhov/goat/templates"
 	"github.com/spyzhov/goat/templates/babex"
@@ -14,6 +13,7 @@ import (
 	"github.com/spyzhov/goat/templates/prometheus"
 	"github.com/spyzhov/goat/templates/rmq_consumer"
 	"github.com/spyzhov/goat/templates/rmq_publisher"
+	"github.com/urfave/cli"
 	"log"
 	"os"
 	"path/filepath"

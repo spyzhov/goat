@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
 	"github.com/spyzhov/goat/action"
+	"github.com/urfave/cli"
 	"log"
 	"os"
 )
