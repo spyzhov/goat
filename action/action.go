@@ -193,7 +193,7 @@ func (a *Action) Invoke() (err error) {
 			log.Fatal(err)
 		}
 		if err1 != nil {
-			log.Fatal(err)
+			log.Fatal(err1)
 		}
 	}
 
