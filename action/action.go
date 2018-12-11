@@ -1,6 +1,7 @@
 package action
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spyzhov/goat/console"
 	"github.com/spyzhov/goat/templates"
@@ -28,6 +29,7 @@ type Action struct {
 	Repo    string
 	Path    string
 	Config  *Config
+	Context *cli.Context
 }
 
 type Config struct {
@@ -59,72 +61,99 @@ type Context struct {
 type TemplateResponse string
 
 func New(c *cli.Context) *Action {
-	var (
-		err    error
-		gopath = os.Getenv("GOPATH") + "/src/"
-		a      = &Action{
-			Console: console.New(),
-		}
-	)
+	var err error
+	a := &Action{
+		Context: c,
+		Console: console.New(),
+	}
 	// region Debug
-	if c.Bool("debug") {
+	if err = a.setDebug(); err != nil {
+		log.Fatal(err)
+	}
+	// endregion
+	// region Path
+	if err = a.setPath(); err != nil {
+		log.Fatal(err)
+	}
+	// endregion
+	// region Name
+	if err = a.setName(); err != nil {
+		log.Fatal(err)
+	}
+	// endregion
+	// region Repository name
+	if err = a.setRepo(); err != nil {
+		log.Fatal(err)
+	}
+	// endregion
+	return a
+}
+
+func (a *Action) setDebug() (err error) {
+	if a.Context.Bool("debug") {
 		a.log = func(format string, v ...interface{}) {
 			log.Printf(format+"\n", v...)
 		}
 	} else {
 		a.log = func(format string, v ...interface{}) {}
 	}
-	// endregion
-	// region Path
-	if a.Path, err = filepath.Abs(c.String("path")); err != nil {
-		log.Fatal(err)
+	return
+}
+
+func (a *Action) setPath() (err error) {
+	if a.Path, err = filepath.Abs(a.Context.String("path")); err != nil {
+		return
 	}
 	a.log("found path: %s", a.Path)
 	if !a.Console.PromptY("Project path [%s]?", a.Path) {
 		if a.Path, err = a.Console.Scanln("Enter correct path: "); err != nil {
-			log.Fatal(err)
+			return
 		}
 		if a.Path, err = filepath.Abs(a.Path); err != nil {
-			log.Fatal(err)
+			return
 		}
 		if a.Path == "" {
-			log.Fatal("Project path was not set")
+			return errors.New("project path was not set")
 		}
 		// TODO: validate
 	}
 	a.log("use path: %s", a.Path)
-	// endregion
-	// region Name
+	return
+}
+
+func (a *Action) setName() (err error) {
 	a.Name = filepath.Base(a.Path)
 	a.log("found name: %s", a.Name)
 	if !a.Console.PromptY("Project name [%s]?", a.Name) {
 		if a.Name, err = a.Console.Scanln("Enter correct name: "); err != nil {
-			log.Fatal(err)
+			return
 		}
 		if a.Name == "" {
-			log.Fatal("Project name was not set")
+			return errors.New("project name was not set")
 		}
 		// TODO: validate
 	}
 	a.log("use name: %s", a.Name)
-	// endregion
-	// region Repository name
+	return
+}
+
+func (a *Action) setRepo() (err error) {
+	gopath := os.Getenv("GOPATH") + "/src/"
 	if strings.HasPrefix(a.Path, gopath) {
 		a.Repo = strings.TrimPrefix(a.Path, gopath)
 	}
 	a.log("found repository name: %s", a.Repo)
 	if a.Repo != "" && !a.Console.PromptY("Repository name [%s]?", a.Repo) {
 		if a.Repo, err = a.Console.Scanln("Enter correct repository name: "); err != nil {
-			log.Fatal(err)
+			return
 		}
 		if a.Repo == "" {
-			log.Fatal("Repository name was not set")
+			return errors.New("repository name was not set")
 		}
 		// TODO: validate
 	}
 	a.log("use repository name: %s", a.Repo)
-	// endregion
-	return a
+	return
 }
 
 func (a *Action) Invoke() (err error) {
@@ -159,8 +188,11 @@ func (a *Action) Invoke() (err error) {
 			log.Fatal(err)
 		}
 		err = tpl.Execute(file, context)
-		file.Close()
+		err1 := file.Close()
 		if err != nil {
+			log.Fatal(err)
+		}
+		if err1 != nil {
 			log.Fatal(err)
 		}
 	}

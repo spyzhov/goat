@@ -79,3 +79,4 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
 - [ ] add choice for http clients (native/fasthttp/echo/etc.);
 - [ ] remove code "noodles" - make module append methods;
 - [ ] normalize migrations;
+- [ ] add Redis support `"github.com/gomodule/redigo/redis"`;
