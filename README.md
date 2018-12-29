@@ -1,6 +1,6 @@
 # About:Goat
 
-Goat is `golang: application template`
+Goat is a simple `golang: application template` builder.
 
 Generate template of your application, via chosen templates:
 * RabbitMQ - consumer or publisher via [https://github.com/streadway/amqp](https://github.com/streadway/amqp);
@@ -27,13 +27,12 @@ Project path [/go/src/github.com/spyzhov/example]? [Y/n]: y
 Project name [example]? [Y/n]: y
 Repository name [github.com/spyzhov/example]? [Y/n]: y
 Use Postgres connection (github.com/go-pg)? [y/N]: y
-With postgres migrations (github.com/go-pg/migrations)? [Y/n]: y
+Use Postgres migrations (github.com/go-pg/migrations)? [y/N]: y
 Use MySQL connection (github.com/go-sql-driver/mysql)? [y/N]: y
-With MySQL migrations (github.com/rubenv/sql-migrate)? [Y/n]: y
-Use HTTP server (het/http)? [y/N]: y
+Use MySQL migrations (github.com/rubenv/sql-migrate)? [y/N]: y
+Use HTTP server (net/http)? [y/N]: y
 Use Prometheus (github.com/prometheus/client_golang)? [y/N]: y
-Use RMQ-consumers (github.com/streadway/amqp)? [y/N]: y
-Use RMQ-publishers (github.com/streadway/amqp)? [y/N]: y
+Use RMQ-consumer (github.com/streadway/amqp)? [y/N]: y
 ```
 
 And you will got :
@@ -44,8 +43,10 @@ And you will got :
 │   ├── config.go
 │   ├── consumer.go
 │   ├── http.go
+│   ├── logger.go
 │   └── publish.go
 ├── Dockerfile
+├── Gopkg.toml
 ├── main.go
 ├── migrations
 │   ├── 01_init.go
@@ -64,7 +65,7 @@ The best and quickest way to start:
 ```
 user@user:/go/src/github.com/spyzhov/example$ goat
 ...
-user@user:/go/src/github.com/spyzhov/example$ dep init
+user@user:/go/src/github.com/spyzhov/example$ dep ensure
 ...
 ... Profit!
 ```
@@ -75,8 +76,9 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
 
 # TODO
 
-- [ ] fix babex usage;
+- [ ] validation for path;
+- [x] add versions for libs;
 - [ ] add choice for http clients (native/fasthttp/echo/etc.);
-- [ ] remove code "noodles" - make module append methods;
+- [x] remove code "noodles" - make module append methods;
 - [ ] normalize migrations;
 - [ ] add Redis support `"github.com/gomodule/redigo/redis"`;

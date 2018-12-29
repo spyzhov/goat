@@ -2,35 +2,57 @@ package http
 
 import "github.com/spyzhov/goat/templates"
 
-var Env []templates.Environment
-var Props = []templates.Property{
-	{Name: "Http", Type: "*http.ServeMux", Default: "http.NewServeMux()"},
-}
-var Libs = []templates.Library{
-	{Name: "net/http"},
-}
-var Models = map[string]string{}
+func New() *templates.Template {
+	return &templates.Template{
+		ID:      "http",
+		Name:    "HTTP server",
+		Package: "net/http",
 
-var TemplateSetter = ""
-var TemplateSetterFunction = ""
-var TemplateRunFunction = `	// Run HTTP server
+		Environments: []*templates.Environment{
+			{Name: "Port", Type: "int", Env: "PORT", Default: "4000"},
+		},
+		Properties: []*templates.Property{
+			{Name: "Http", Type: "*http.ServeMux", Default: "http.NewServeMux()"},
+		},
+		Libraries: []*templates.Library{
+			{Name: "net/http"},
+		},
+		Models: map[string]string{},
+
+		TemplateSetter:         templates.BlankFunction,
+		TemplateSetterFunction: templates.BlankFunction,
+		TemplateRunFunction: func(config *templates.Config) (s string) {
+			s = `	// Run HTTP server
 	if err = application.RunHttp(); err != nil {
-		application.Logger.Fatal("HTTP Server start error", zap.Error(err))
+		application.Logger.Panic("HTTP Server start error", zap.Error(err))
 	}`
-var Templates = map[string]string{
-	"app/http.go": `package app
+			return
+		},
+
+		Templates: func(config *templates.Config) (strings map[string]string) {
+			strings = map[string]string{
+				"app/http.go": `package app
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 )
 
 func (a *Application) RunHttp() error {
-	// TODO: Implement me
+	a.Http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Not implemented")
+		w.WriteHeader(http.StatusNotImplemented)
+	})
 	go func() {
-		a.Logger.Info("http server started on [::]:4000")
-		a.Error <- http.ListenAndServe(":4000", a.Http)
+		a.Logger.Info("http server started on [::]:"+strconv.Itoa(a.Config.Port))
+		a.Error <- http.ListenAndServe(":"+strconv.Itoa(a.Config.Port), a.Http)
 	}()
 	return nil
 }
 `,
+			}
+			return
+		},
+	}
 }
