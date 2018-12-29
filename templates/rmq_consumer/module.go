@@ -2,34 +2,44 @@ package rmq_consumer
 
 import "github.com/spyzhov/goat/templates"
 
-var Env = []templates.Environment{
-	{Name: "ConsumerAddress", Type: "string", Env: "CONSUMER_ADDR", Default: "amqp://guest:guest@localhost:5672"},
-	{Name: "ConsumerExchange", Type: "string", Env: "CONSUMER_EXCHANGE"},
-	{Name: "ConsumerQueue", Type: "string", Env: "CONSUMER_QUEUE"},
-	{Name: "ConsumerRoutingKey", Type: "string", Env: "CONSUMER_ROUTING_KEY"},
-}
-var Props = []templates.Property{
-	{Name: "Consumer", Type: "*RabbitMq", Default: "new(RabbitMq)"},
-}
-var Libs = []templates.Library{
-	{Name: "errors"},
-	{Name: "github.com/streadway/amqp"},
-}
-var Models = map[string]string{
-	"RabbitMq": `
+func New() *templates.Template {
+	return &templates.Template{
+		ID:      "rmq_consumer",
+		Name:    "RMQ-consumer",
+		Package: "github.com/streadway/amqp",
+
+		Environments: []*templates.Environment{
+			{Name: "ConsumerAddress", Type: "string", Env: "CONSUMER_ADDR", Default: "amqp://guest:guest@localhost:5672"},
+			{Name: "ConsumerExchange", Type: "string", Env: "CONSUMER_EXCHANGE"},
+			{Name: "ConsumerQueue", Type: "string", Env: "CONSUMER_QUEUE"},
+			{Name: "ConsumerRoutingKey", Type: "string", Env: "CONSUMER_ROUTING_KEY"},
+		},
+		Properties: []*templates.Property{
+			{Name: "Consumer", Type: "*RabbitMq", Default: "new(RabbitMq)"},
+		},
+		Libraries: []*templates.Library{
+			{Name: "errors"},
+			{Name: "github.com/streadway/amqp"},
+		},
+		Models: map[string]string{
+			"RabbitMq": `
 type RabbitMq struct {
 	Connection *amqp.Connection
 	Channel    *amqp.Channel
 	Queue      *amqp.Queue
 }`,
-}
+		},
 
-var TemplateSetter = `
+		TemplateSetter: func(config *templates.Config) (s string) {
+			s = `
 	if err = app.setConsumer(&app.Consumer, app.Config.ConsumerAddress, app.Config.ConsumerExchange, app.Config.ConsumerQueue, app.Config.ConsumerRoutingKey); err != nil {
-		logger.Fatal("cannot connect to consumer RabbitMQ", zap.Error(err))
+		logger.Panic("cannot connect to consumer RabbitMQ", zap.Error(err))
 		return nil, err
 	}`
-var TemplateSetterFunction = `
+			return
+		},
+		TemplateSetterFunction: func(config *templates.Config) (s string) {
+			s = `
 // RMQ set consumer
 func (a *Application) setConsumer(consumer **RabbitMq, address, exchange, queueName, routingKey string) (err error) {
 	a.Logger.Debug("RabbitMQ consumer connect", zap.String("address", address))
@@ -73,12 +83,19 @@ func (a *Application) setConsumer(consumer **RabbitMq, address, exchange, queueN
 
 	return nil
 }`
-var TemplateRunFunction = `	// Run RabbitMQ Consumer
+			return
+		},
+		TemplateRunFunction: func(config *templates.Config) (s string) {
+			s = `	// Run RabbitMQ Consumer
 	if err = application.RunConsumer(application.Consumer, application.Config.ConsumerQueue); err != nil {
-		application.Logger.Fatal("RabbitMQ consumer start error", zap.Error(err))
+		application.Logger.Panic("RabbitMQ consumer start error", zap.Error(err))
 	}`
-var Templates = map[string]string{
-	"app/consumer.go": `package app
+			return
+		},
+
+		Templates: func(config *templates.Config) (strings map[string]string) {
+			strings = map[string]string{
+				"app/consumer.go": `package app
 
 import (
 	"go.uber.org/zap"
@@ -125,4 +142,8 @@ func (a *Application) consumerHandle(msg *amqp.Delivery) {
 	msg.Ack(false)
 }
 `,
+			}
+			return
+		},
+	}
 }

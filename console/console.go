@@ -9,19 +9,19 @@ import (
 )
 
 type Console struct {
-	Input *bufio.Reader
+	input *bufio.Reader
 }
 
 func New() *Console {
 	return &Console{
-		Input: bufio.NewReader(os.Stdin),
+		input: bufio.NewReader(os.Stdin),
 	}
 }
 
 func (c *Console) Scanln(ask string, args ...interface{}) (string, error) {
 	fmt.Printf(ask, args...)
 
-	input, err := c.Input.ReadString('\n')
+	input, err := c.input.ReadString('\n')
 	return strings.TrimSpace(input), err
 }
 
@@ -30,7 +30,7 @@ func (c *Console) Prompt(ask string, args ...interface{}) bool {
 	if err != nil {
 		panic(err)
 	}
-	return strings.ToLower(str) == "y"
+	return len(str) > 0 && strings.ToLower(str)[0] == 'y'
 }
 
 func (c *Console) PromptY(ask string, args ...interface{}) bool {
@@ -38,43 +38,33 @@ func (c *Console) PromptY(ask string, args ...interface{}) bool {
 	if err != nil {
 		panic(err)
 	}
-	return strings.ToLower(str) != "n"
+	return !(len(str) > 0 && strings.ToLower(str)[0] == 'n')
 }
 
-func (c *Console) PromptInt(ask string, args ...interface{}) int {
+func (c *Console) PromptInt(ask string, max int, args ...interface{}) int {
 	for {
-		str, err := c.Scanln(ask+" [0-9]: ", args...)
+		args = append(args, max)
+		str, err := c.Scanln(ask+" [0-%d]: ", args...)
 		if err != nil {
 			panic(err)
 		}
+		str = strings.TrimSpace(str)
 		if str == "" {
-			return 0
+			continue
 		}
 		result, err := strconv.Atoi(str)
-		if err == nil {
-			return result
-
+		if err != nil {
+			fmt.Printf("Enter only numbers...\n")
+			continue
 		}
-		fmt.Printf("Enter only numbers...\n")
-	}
-}
-
-func (c *Console) PromptIntP(ask string, args ...interface{}) (result int) {
-	for {
-		result = c.PromptInt(ask, args...)
-		if result >= 0 {
-			return result
+		if result < 0 {
+			fmt.Printf("Enter only positive numbers...\n")
+			continue
 		}
-		fmt.Printf("Enter only positive numbers...\n")
-	}
-}
-
-func (c *Console) PromptIntN(ask string, args ...interface{}) (result int) {
-	for {
-		result = c.PromptInt(ask, args...)
-		if result <= 0 {
-			return result
+		if result > max {
+			fmt.Printf("Enter only numbers lower or equal than %d...\n", max)
+			continue
 		}
-		fmt.Printf("Enter only negative numbers...\n")
+		return result
 	}
 }

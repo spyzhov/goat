@@ -3,7 +3,7 @@
 
 [[projects]]
   digest = "1:b24d38b282bacf9791408a080f606370efa3d364e4b5fd9ba0f7b87786d3b679"
-  name = "github.com/codegangsta/cli"
+  name = "github.com/urfave/cli"
   packages = ["."]
   pruneopts = "UT"
   revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
@@ -12,6 +12,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = ["github.com/codegangsta/cli"]
+  input-imports = ["github.com/urfave/cli"]
   solver-name = "gps-cdcl"
   solver-version = 1

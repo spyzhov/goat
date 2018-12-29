@@ -2,28 +2,43 @@ package migrations
 
 import "github.com/spyzhov/goat/templates"
 
-var Env []templates.Environment
-var Props []templates.Property
-var Libs = []templates.Library{
-	{Name: "{{.Repo}}/migrations"},
-}
-var Models = map[string]string{}
+func New() *templates.Template {
+	return &templates.Template{
+		ID:           "postgres/migrations",
+		Name:         "Postgres migrations",
+		Package:      "github.com/go-pg/migrations",
+		Dependencies: []string{"postgres"},
 
-var TemplateSetter = `
+		Environments: []*templates.Environment{},
+		Properties:   []*templates.Property{},
+		Libraries: []*templates.Library{
+			{Name: "{{.Repo}}/migrations"},
+		},
+		Models: map[string]string{},
+
+		TemplateSetter: func(config *templates.Config) (s string) {
+			s = `
 	if err = app.migratePostgres(); err != nil {
-		logger.Fatal("cannot migrate on Postgres", zap.Error(err))
+		logger.Panic("cannot migrate on Postgres", zap.Error(err))
 		return nil, err
 	}`
-var TemplateSetterFunction = `
+			return
+		},
+		TemplateSetterFunction: func(config *templates.Config) (s string) {
+			s = `
 // PG migrations up
 func (a *Application) migratePostgres() error {
 	a.Logger.Debug("PG migrate")
 	migrations.Postgres(a.Postgres, a.Logger)
 	return nil
 }`
-var TemplateRunFunction = ""
-var Templates = map[string]string{
-	"migrations/postgres.go": `package migrations
+			return
+		},
+		TemplateRunFunction: templates.BlankFunction,
+
+		Templates: func(config *templates.Config) (strings map[string]string) {
+			strings = map[string]string{
+				"migrations/postgres.go": `package migrations
 
 import (
 	"github.com/go-pg/migrations"
@@ -37,7 +52,7 @@ func Postgres(db *pg.DB, logger *zap.Logger) {
 	oldVersion, newVersion, err := migrations.Run(db, "up")
 
 	if err != nil {
-		logger.Fatal("Error on run migration", zap.Error(err))
+		logger.Panic("Error on run migration", zap.Error(err))
 	}
 
 	if newVersion != oldVersion {
@@ -47,7 +62,7 @@ func Postgres(db *pg.DB, logger *zap.Logger) {
 	}
 }
 `,
-	"migrations/01_init.go": `package migrations
+				"migrations/01_init.go": `package migrations
 
 import (
 	"fmt"
@@ -68,4 +83,8 @@ func init() {
 	})
 }
 `,
+			}
+			return
+		},
+	}
 }

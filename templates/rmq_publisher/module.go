@@ -2,33 +2,43 @@ package rmq_publisher
 
 import "github.com/spyzhov/goat/templates"
 
-var Env = []templates.Environment{
-	{Name: "PublisherAddress", Type: "string", Env: "PUBLISHER_ADDR", Default: "amqp://guest:guest@localhost:5672"},
-	{Name: "PublisherExchange", Type: "string", Env: "PUBLISHER_EXCHANGE"},
-	{Name: "PublisherRoutingKey", Type: "string", Env: "PUBLISHER_ROUTING_KEY"},
-}
-var Props = []templates.Property{
-	{Name: "Publisher", Type: "*RabbitMq", Default: "new(RabbitMq)"},
-}
-var Libs = []templates.Library{
-	{Name: "github.com/streadway/amqp"},
-	{Name: "errors"},
-}
-var Models = map[string]string{
-	"RabbitMq": `
+func New() *templates.Template {
+	return &templates.Template{
+		ID:      "rmq_publisher",
+		Name:    "RMQ-publisher",
+		Package: "github.com/streadway/amqp",
+
+		Environments: []*templates.Environment{
+			{Name: "PublisherAddress", Type: "string", Env: "PUBLISHER_ADDR", Default: "amqp://guest:guest@localhost:5672"},
+			{Name: "PublisherExchange", Type: "string", Env: "PUBLISHER_EXCHANGE"},
+			{Name: "PublisherRoutingKey", Type: "string", Env: "PUBLISHER_ROUTING_KEY"},
+		},
+		Properties: []*templates.Property{
+			{Name: "Publisher", Type: "*RabbitMq", Default: "new(RabbitMq)"},
+		},
+		Libraries: []*templates.Library{
+			{Name: "errors"},
+			{Name: "github.com/streadway/amqp"},
+		},
+		Models: map[string]string{
+			"RabbitMq": `
 type RabbitMq struct {
 	Connection *amqp.Connection
 	Channel    *amqp.Channel
 	Queue      *amqp.Queue
 }`,
-}
+		},
 
-var TemplateSetter = `
+		TemplateSetter: func(config *templates.Config) (s string) {
+			s = `
 	if err = app.setPublisher(&app.Publisher, app.Config.PublisherAddress); err != nil {
-		logger.Fatal("cannot connect to publisher RabbitMQ", zap.Error(err))
+		logger.Panic("cannot connect to publisher RabbitMQ", zap.Error(err))
 		return nil, err
 	}`
-var TemplateSetterFunction = `
+			return
+		},
+		TemplateSetterFunction: func(config *templates.Config) (s string) {
+			s = `
 // RMQ set publisher
 func (a *Application) setPublisher(publisher **RabbitMq, address string) (err error) {
 	a.Logger.Debug("RabbitMQ publisher connect", zap.String("address", address))
@@ -54,9 +64,13 @@ func (a *Application) setPublisher(publisher **RabbitMq, address string) (err er
 
 	return nil
 }`
-var TemplateRunFunction = ""
-var Templates = map[string]string{
-	"app/publish.go": `package app
+			return
+		},
+		TemplateRunFunction: templates.BlankFunction,
+
+		Templates: func(config *templates.Config) (strings map[string]string) {
+			strings = map[string]string{
+				"app/publish.go": `package app
 
 import (
 	"github.com/streadway/amqp"
@@ -80,4 +94,8 @@ func (a *Application) publish(body []byte) error {
 	)
 }
 `,
+			}
+			return
+		},
+	}
 }

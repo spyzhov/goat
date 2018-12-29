@@ -1,37 +1,32 @@
 package templates
 
-type Environment struct {
-	Name    string
-	Type    string
-	Env     string
-	Default string
-}
-type Property struct {
-	Name    string
-	Type    string
-	Default string
-}
-type Library struct {
-	Name  string
-	Alias string
-}
+func New() *Template {
+	return &Template{
+		ID:      "main",
+		Name:    "Main",
+		Package: "",
 
-var Env = []Environment{
-	{Name: "Level", Type: "string", Env: "LOG_LEVEL", Default: "info"},
-	{Name: "Debug", Type: "bool", Env: "DEBUG"},
-}
-var Props = []Property{
-	{Name: "Logger", Type: "*zap.Logger", Default: "logger"},
-	{Name: "Config", Type: "*Config", Default: "config"},
-	{Name: "Error", Type: "chan error", Default: "make(chan error)"},
-}
-var Libs = []Library{
-	{Name: "go.uber.org/zap"},
-}
-var Models map[string]string
+		Environments: []*Environment{
+			{Name: "Level", Type: "string", Env: "LOG_LEVEL", Default: "info"},
+			{Name: "Debug", Type: "bool", Env: "DEBUG"},
+		},
+		Properties: []*Property{
+			{Name: "Logger", Type: "*zap.Logger", Default: "logger"},
+			{Name: "Config", Type: "*Config", Default: "config"},
+			{Name: "Error", Type: "chan error", Default: "make(chan error)"},
+		},
+		Libraries: []*Library{
+			{Name: "go.uber.org/zap", Version: "^1.9.1"},
+		},
+		Models: map[string]string{},
 
-var Templates = map[string]string{
-	"main.go": `package main
+		TemplateSetter:         BlankFunction,
+		TemplateSetterFunction: BlankFunction,
+		TemplateRunFunction:    BlankFunction,
+
+		Templates: func(config *Config) (strings map[string]string) {
+			strings = map[string]string{
+				"main.go": `package main
 
 import (
 	"go.uber.org/zap"
@@ -52,18 +47,17 @@ func main() {
 
 	select {
 	case err = <-application.Error:
-		application.Logger.Fatal("service crashed", zap.Error(err))
+		application.Logger.Panic("service crashed", zap.Error(err))
 	case sig := <-signals.WaitExit():
 		application.Logger.Info("service stop", zap.Stringer("signal", sig))
 	}
 }
 
 `,
-	"app/config.go": `package app
+				"app/config.go": `package app
 
 import (
 	"github.com/caarlos0/env"
-	"go.uber.org/zap"
 )
 
 type Config struct {
@@ -79,6 +73,13 @@ func NewConfig() (*Config, error) {
 
 	return &cfg, nil
 }
+
+`,
+				"app/logger.go": `package app
+
+import (
+	"go.uber.org/zap"
+)
 
 func NewLogger(level string) (*zap.Logger, error) {
 	cfg := zap.NewProductionConfig()
@@ -96,7 +97,7 @@ func NewLogger(level string) (*zap.Logger, error) {
 }
 
 `,
-	"app/app.go": `package app
+				"app/app.go": `package app
 
 import (
 {{.Repos}}
@@ -111,7 +112,7 @@ func New() (*Application, error) {
 	config, err := NewConfig()
 	logger, _ := NewLogger(config.Level)
 	if err != nil {
-		logger.Fatal("cannot parse config", zap.Error(err))
+		logger.Panic("cannot parse config", zap.Error(err))
 		return nil, err
 	}
 	logger.Debug("debug mode on")
@@ -125,7 +126,7 @@ func New() (*Application, error) {
 }
 {{.SetterFunction}}
 `,
-	"signals/signals.go": `package signals
+				"signals/signals.go": `package signals
 
 import (
 	"os"
@@ -142,7 +143,7 @@ func WaitExit() chan os.Signal {
 }
 
 `,
-	"Dockerfile": `FROM alpine:latest as alpine
+				"Dockerfile": `FROM alpine:latest as alpine
 RUN apk --no-cache add tzdata zip ca-certificates
 WORKDIR /usr/share/zoneinfo
 # -0 means no compression.  Needed because go's
@@ -171,7 +172,7 @@ COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/bin/{{.Name}} ./{{.Name}}
 CMD ["./{{.Name}}"]
 `,
-	"README.md": `# About
+				"README.md": `# About
 
 TODO
 
@@ -183,4 +184,41 @@ type Config struct {
 }
 {{.MdCode}}
 `,
+				"Gopkg.toml": `# Gopkg.toml example
+#
+# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#   name = "github.com/x/y"
+#   version = "2.4.0"
+#
+# [prune]
+#   non-go = false
+#   go-tests = true
+#   unused-packages = true
+
+
+[prune]
+  go-tests = true
+  unused-packages = true
+
+{{.DepLibs}}
+`,
+			}
+			return
+		},
+	}
 }

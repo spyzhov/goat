@@ -2,27 +2,42 @@ package migrations
 
 import "github.com/spyzhov/goat/templates"
 
-var Env []templates.Environment
-var Props []templates.Property
-var Libs = []templates.Library{
-	{Name: "{{.Repo}}/migrations"},
-}
-var Models = map[string]string{}
+func New() *templates.Template {
+	return &templates.Template{
+		ID:           "mysql/migrations",
+		Name:         "MySQL migrations",
+		Package:      "github.com/rubenv/sql-migrate",
+		Dependencies: []string{"mysql"},
 
-var TemplateSetter = `
+		Environments: []*templates.Environment{},
+		Properties:   []*templates.Property{},
+		Libraries: []*templates.Library{
+			{Name: "{{.Repo}}/migrations"},
+		},
+		Models: map[string]string{},
+
+		TemplateSetter: func(config *templates.Config) (s string) {
+			s = `
 	if err = app.migrateMySQL(); err != nil {
-		logger.Fatal("cannot migrate on MySQL", zap.Error(err))
+		logger.Panic("cannot migrate on MySQL", zap.Error(err))
 		return nil, err
 	}`
-var TemplateSetterFunction = `
+			return
+		},
+		TemplateSetterFunction: func(config *templates.Config) (s string) {
+			s = `
 // MySQL migrations up
 func (a *Application) migrateMySQL() error {
 	a.Logger.Debug("MySQL migrate")
 	return migrations.MySQL(a.MySQL, a.Logger)
 }`
-var TemplateRunFunction = ""
-var Templates = map[string]string{
-	"migrations/mysql.go": `package migrations
+			return
+		},
+		TemplateRunFunction: templates.BlankFunction,
+
+		Templates: func(config *templates.Config) (strings map[string]string) {
+			strings = map[string]string{
+				"migrations/mysql.go": `package migrations
 
 import (
 	"database/sql"
@@ -56,10 +71,14 @@ func MySQL(db *sql.DB, logger *zap.Logger) error {
 	return nil
 }
 `,
-	"migrations/mysql/1-init.sql": `-- +migrate Up
+				"migrations/mysql/1-init.sql": `-- +migrate Up
 SELECT NOW();
 
 -- +migrate Down
 SELECT NOW();
 `,
+			}
+			return
+		},
+	}
 }
