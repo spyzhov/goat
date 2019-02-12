@@ -85,14 +85,14 @@ func (c *Config) Init(console *console.Console) {
 
 func (c *Config) canPrompt(tpl *Template) bool {
 	for _, tID := range tpl.Dependencies {
-		if !c.isEnabled(tID) {
+		if !c.IsEnabled(tID) {
 			return false
 		}
 	}
 	return true
 }
 
-func (c *Config) isEnabled(tID string) bool {
+func (c *Config) IsEnabled(tID string) bool {
 	for _, tpl := range c.Install {
 		if tpl.ID == tID {
 			return true

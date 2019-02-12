@@ -39,10 +39,12 @@ func (a *Application) setPrometheus() error {
 			return
 		},
 		TemplateRunFunction: func(config *templates.Config) (s string) {
-			s = `	// Run HTTP Server
+			if !config.IsEnabled("http") {
+				s = `	// Run HTTP Server
 	if err = application.RunHttp(); err != nil {
 		application.Logger.Panic("HTTP Server start error", zap.Error(err))
 	}`
+			}
 			return
 		},
 
