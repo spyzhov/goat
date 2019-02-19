@@ -27,13 +27,14 @@ func New() *templates.Template {
 		TemplateSetterFunction: func(config *templates.Config) (s string) {
 			s = `
 // MySQL migrations up
-func (a *Application) migrateMySQL() error {
-	a.Logger.Debug("MySQL migrate")
-	return migrations.MySQL(a.MySQL, a.Logger)
+func (app *Application) migrateMySQL() error {
+	app.Logger.Debug("MySQL migrate")
+	return migrations.MySQL(app.MySQL, app.Logger)
 }`
 			return
 		},
 		TemplateRunFunction: templates.BlankFunction,
+		TemplateClosers:     templates.BlankFunction,
 
 		Templates: func(config *templates.Config) (strings map[string]string) {
 			strings = map[string]string{

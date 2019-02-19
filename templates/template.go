@@ -26,6 +26,7 @@ type Template struct {
 	TemplateSetter         func(*Config) string
 	TemplateSetterFunction func(*Config) string
 	TemplateRunFunction    func(*Config) string
+	TemplateClosers        func(*Config) string
 	Templates              func(*Config) map[string]string
 }
 
@@ -55,6 +56,7 @@ type (
 	Libraries               []*Library
 	Models                  []string
 	TemplateRunFunctions    []string
+	TemplateClosers         []string
 	TemplateSetters         []string
 	TemplateSetterFunctions []string
 	TemplateFiles           map[string]string
@@ -166,7 +168,15 @@ func (c *Config) Models() (result Models) {
 func (c *Config) TemplateRunFunctions() (result TemplateRunFunctions) {
 	result = make(TemplateRunFunctions, 0)
 	for _, tpl := range c.Install {
-		result = append_if(result, tpl.TemplateRunFunction(c))
+		result = appendIf(result, tpl.TemplateRunFunction(c))
+	}
+	return
+}
+
+func (c *Config) TemplateClosers() (result TemplateClosers) {
+	result = make(TemplateClosers, 0)
+	for _, tpl := range c.Install {
+		result = appendIf(result, tpl.TemplateClosers(c))
 	}
 	return
 }
@@ -174,7 +184,7 @@ func (c *Config) TemplateRunFunctions() (result TemplateRunFunctions) {
 func (c *Config) TemplateSetters() (result TemplateSetters) {
 	result = make(TemplateSetters, 0)
 	for _, tpl := range c.Install {
-		result = append_if(result, tpl.TemplateSetter(c))
+		result = appendIf(result, tpl.TemplateSetter(c))
 	}
 	return
 }
@@ -182,7 +192,7 @@ func (c *Config) TemplateSetters() (result TemplateSetters) {
 func (c *Config) TemplateSetterFunctions() (result TemplateSetterFunctions) {
 	result = make(TemplateSetterFunctions, 0)
 	for _, tpl := range c.Install {
-		result = append_if(result, tpl.TemplateSetterFunction(c))
+		result = appendIf(result, tpl.TemplateSetterFunction(c))
 	}
 	return
 }
@@ -301,20 +311,26 @@ func (models Models) String() string {
 
 //endregion
 //region TemplateRunFunctions
-func (funcs TemplateRunFunctions) String() string {
-	return join(funcs, "\n")
+func (functions TemplateRunFunctions) String() string {
+	return join(functions, "\n")
+}
+
+//endregion
+//region TemplateClosers
+func (functions TemplateClosers) String() string {
+	return join(functions, "\n")
 }
 
 //endregion
 //region TemplateSetters
-func (funcs TemplateSetters) String() string {
-	return join(funcs, "\n")
+func (functions TemplateSetters) String() string {
+	return join(functions, "\n")
 }
 
 //endregion
 //region TemplateSetterFunctions
-func (funcs TemplateSetterFunctions) String() string {
-	return join(funcs, "\n")
+func (functions TemplateSetterFunctions) String() string {
+	return join(functions, "\n")
 }
 
 //endregion
@@ -332,7 +348,7 @@ func join(parts []string, sep string) (result string) {
 	return
 }
 
-func append_if(array []string, value string) []string {
+func appendIf(array []string, value string) []string {
 	if value != "" {
 		return append(array, value)
 	}

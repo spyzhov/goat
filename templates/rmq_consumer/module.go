@@ -41,14 +41,27 @@ type RabbitMq struct {
 		TemplateSetterFunction: func(config *templates.Config) (s string) {
 			s = `
 // RMQ set consumer
-func (a *Application) setConsumer(consumer **RabbitMq, address, exchange, queueName, routingKey string) (err error) {
-	a.Logger.Debug("RabbitMQ consumer connect", zap.String("address", address))
+func (app *Application) setConsumer(consumer **RabbitMq, address, exchange, queueName, routingKey string) (err error) {
+	app.Logger.Debug("RabbitMQ consumer connect", zap.String("address", address))
 	(*consumer).Connection, err = amqp.Dial(address)
 	if err != nil {
 		return err
 	}
 
 	(*consumer).Channel, err = (*consumer).Connection.Channel()
+	if err != nil {
+		return err
+	}
+
+	err = (*consumer).Channel.ExchangeDeclare(
+		exchange,
+		"direct",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
 	if err != nil {
 		return err
 	}
@@ -74,10 +87,17 @@ func (a *Application) setConsumer(consumer **RabbitMq, address, exchange, queueN
 	// OnClose
 	cerr := make(chan *amqp.Error)
 	(*consumer).Channel.NotifyClose(cerr)
+
+	app.WaitGroup.Add(1)
 	go func() {
-		err, ok := <-cerr
-		if ok {
-			a.Error <- errors.New(err.Error())
+		defer app.WaitGroup.Done()
+		select {
+		case <-app.Ctx.Done():
+			return
+		case err, ok := <-cerr:
+			if ok && err != nil {
+				app.Error <- errors.New(err.Error())
+			}
 		}
 	}()
 
@@ -87,9 +107,27 @@ func (a *Application) setConsumer(consumer **RabbitMq, address, exchange, queueN
 		},
 		TemplateRunFunction: func(config *templates.Config) (s string) {
 			s = `	// Run RabbitMQ Consumer
-	if err = application.RunConsumer(application.Consumer, application.Config.ConsumerQueue); err != nil {
-		application.Logger.Panic("RabbitMQ consumer start error", zap.Error(err))
+	if err = app.RunConsumer(app.Consumer, app.Config.ConsumerQueue); err != nil {
+		app.Logger.Panic("RabbitMQ consumer start error", zap.Error(err))
 	}`
+			return
+		},
+		TemplateClosers: func(*templates.Config) (s string) {
+			s = `
+	defer func() {
+		if app.Consumer != nil && app.Consumer.Connection != nil {
+			if err := app.Consumer.Connection.Close(); err != nil {
+				app.Logger.Warn("error on consumer connection close", zap.Error(err))
+			}
+		}
+	}()
+	defer func() {
+		if app.Consumer != nil && app.Consumer.Channel != nil {
+			if err := app.Consumer.Channel.Close(); err != nil {
+				app.Logger.Warn("error on consumer channel close", zap.Error(err))
+			}
+		}
+	}()`
 			return
 		},
 
@@ -98,12 +136,18 @@ func (a *Application) setConsumer(consumer **RabbitMq, address, exchange, queueN
 				"app/consumer.go": `package app
 
 import (
-	"go.uber.org/zap"
+	"errors"
 	"github.com/streadway/amqp"
+	"go.uber.org/zap"
+	"runtime"
 )
 
-func (a *Application) RunConsumer(consumer *RabbitMq, queue string) (err error) {
-	a.Logger.Info("consumer start")
+var (
+	ConsumerStopError = errors.New("consumer stops")
+)
+
+func (app *Application) RunConsumer(consumer *RabbitMq, queue string) (err error) {
+	app.Logger.Info("consumer start")
 	msgs, err := consumer.Channel.Consume(
 		queue,
 		"{{.Name}}-consumer",
@@ -117,27 +161,35 @@ func (a *Application) RunConsumer(consumer *RabbitMq, queue string) (err error) 
 		return err
 	}
 
-	go func() {
-		defer func() {
-			consumer.Connection.Close()
-		}()
-		for {
-			select {
-			case msg, ok := <-msgs:
-				if ok {
-					a.Logger.Debug("income message", zap.ByteString("message", msg.Body))
-					if len(msg.Body) > 0 {
-						go a.consumerHandle(&msg)
+	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
+		app.WaitGroup.Add(1)
+		go func(i int) {
+			defer app.WaitGroup.Done()
+			app.Logger.Debug("consumer worker add", zap.Int("worker", i))
+			for {
+				select {
+				case <-app.Ctx.Done():
+					app.Logger.Debug("consumer worker close", zap.Int("worker", i))
+					return
+				case msg, ok := <-msgs:
+					if ok {
+						app.Logger.Debug("income message", zap.ByteString("message", msg.Body))
+						if len(msg.Body) > 0 {
+							app.consumerHandle(&msg)
+						}
+					} else {
+						app.Error <- ConsumerStopError
+						return
 					}
 				}
 			}
-		}
-	}()
+		}(i)
+	}
 
 	return nil
 }
 
-func (a *Application) consumerHandle(msg *amqp.Delivery) {
+func (app *Application) consumerHandle(msg *amqp.Delivery) {
 	//TODO: Implement me
 	msg.Ack(false)
 }

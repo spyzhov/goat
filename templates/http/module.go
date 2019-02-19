@@ -23,11 +23,12 @@ func New() *templates.Template {
 		TemplateSetterFunction: templates.BlankFunction,
 		TemplateRunFunction: func(config *templates.Config) (s string) {
 			s = `	// Run HTTP server
-	if err = application.RunHttp(); err != nil {
-		application.Logger.Panic("HTTP Server start error", zap.Error(err))
+	if err = app.RunHttp(); err != nil {
+		app.Logger.Panic("HTTP Server start error", zap.Error(err))
 	}`
 			return
 		},
+		TemplateClosers: templates.BlankFunction,
 
 		Templates: func(config *templates.Config) (strings map[string]string) {
 			strings = map[string]string{
@@ -35,18 +36,49 @@ func New() *templates.Template {
 
 import (
 	"fmt"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 )
 
-func (a *Application) RunHttp() error {
-	a.Http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Not implemented")
+// Declare all necessary HTTP methods
+func (app *Application) defineHttpMethods() {
+	app.Http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotImplemented)
+		_, err := fmt.Fprint(w, "Not implemented")
+		app.Logger.Warn("error on write response", zap.Error(err))
 	})
+}
+
+// Start HTTP server
+func (app *Application) RunHttp() error {
+	app.defineHttpMethods()
+
+	app.WaitGroup.Add(1)
 	go func() {
-		a.Logger.Info("http server started on [::]:"+strconv.Itoa(a.Config.Port))
-		a.Error <- http.ListenAndServe(":"+strconv.Itoa(a.Config.Port), a.Http)
+		defer app.WaitGroup.Done()
+		app.Logger.Info("http server started on [::]:" + strconv.Itoa(app.Config.Port))
+		server := &http.Server{
+			Addr:    ":" + strconv.Itoa(app.Config.Port),
+			Handler: app.Http,
+		}
+		server.RegisterOnShutdown(app.ctxCancel)
+
+		app.WaitGroup.Add(1)
+		go func() {
+			defer app.WaitGroup.Done()
+			app.Error <- server.ListenAndServe()
+			app.Logger.Debug("http server ListenAndServe stops")
+		}()
+
+		select {
+		case <-app.Ctx.Done():
+			if err := server.Close(); err != nil {
+				app.Logger.Error("http server close error", zap.Error(err))
+			}
+			app.Logger.Debug("http stops")
+			return
+		}
 	}()
 	return nil
 }

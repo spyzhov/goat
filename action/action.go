@@ -36,6 +36,7 @@ type Context struct {
 	Repo           string
 	Repos          string
 	Runners        string
+	Closers        string
 	Setter         string
 	SetterFunction string
 	Props          string
@@ -152,6 +153,7 @@ func (a *Action) Invoke() (err error) {
 		Repo:           a.Repo,
 		Repos:          render("repos", a.getLibraries(), a),
 		Runners:        a.getTemplateRunFunctions(),
+		Closers:        a.getTemplateClosers(),
 		Setter:         a.getTemplateSetters(),
 		SetterFunction: a.getTemplateSetterFunction(),
 		Props:          a.getProperties(),
@@ -248,6 +250,10 @@ func (a *Action) getDepLibraries() string {
 func (a *Action) getTemplateRunFunctions() string {
 	a.log("runners: start")
 	return a.Config.TemplateRunFunctions().String()
+}
+func (a *Action) getTemplateClosers() string {
+	a.log("closers: start")
+	return a.Config.TemplateClosers().String()
 }
 
 func (a *Action) getTemplateSetters() string {

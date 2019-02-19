@@ -33,6 +33,7 @@ Use MySQL migrations (github.com/rubenv/sql-migrate)? [y/N]: y
 Use HTTP server (net/http)? [y/N]: y
 Use Prometheus (github.com/prometheus/client_golang)? [y/N]: y
 Use RMQ-consumer (github.com/streadway/amqp)? [y/N]: y
+Use RMQ-publisher (github.com/streadway/amqp)? [y/N]: y
 ```
 
 And you will got :
@@ -82,3 +83,4 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
 - [x] remove code "noodles" - make module append methods;
 - [ ] normalize migrations;
 - [ ] add Redis support `"github.com/gomodule/redigo/redis"`;
+- [x] add context & WaitGroups;
