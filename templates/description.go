@@ -185,7 +185,7 @@ WORKDIR /usr/share/zoneinfo
 # tz loader doesn't handle compressed data.
 RUN zip -r -0 /zoneinfo.zip .
 
-FROM golang:1.10 AS builder
+FROM golang:1.11 AS builder
 # build via packr hard way https://github.com/gobuffalo/packr#building-a-binary-the-hard-way
 RUN go get -u github.com/gobuffalo/packr/...
 WORKDIR /go/src/{{.Repo}}
