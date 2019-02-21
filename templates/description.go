@@ -49,7 +49,6 @@ func main() {
 		application.Run()
 	}
 }
-
 `,
 				"app/config.go": `package app
 
@@ -65,7 +64,6 @@ func NewConfig() (cfg *Config, err error) {
 	cfg = new(Config)
 	return cfg, env.Parse(cfg)
 }
-
 `,
 				"app/logger.go": `package app
 
@@ -87,7 +85,6 @@ func NewLogger(level string) (*zap.Logger, error) {
 
 	return cfg.Build()
 }
-
 `,
 				"app/app.go": `package app
 
@@ -175,7 +172,6 @@ func WaitExit() chan os.Signal {
 
 	return sigs
 }
-
 `,
 				"Dockerfile": `FROM alpine:latest as alpine
 RUN apk --no-cache add tzdata zip ca-certificates
