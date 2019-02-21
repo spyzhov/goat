@@ -84,3 +84,6 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
 - [ ] normalize migrations;
 - [ ] add Redis support `"github.com/gomodule/redigo/redis"`;
 - [x] add context & WaitGroups;
+- [ ] Dependencies:
+  - [x] add `dep` support;
+  - [ ] add `go mod` support;
