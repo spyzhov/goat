@@ -35,24 +35,35 @@ func New() *templates.Template {
 				"app/http.go": `package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // Declare all necessary HTTP methods
-func (app *Application) defineHttpMethods() {
+func (app *Application) registerRoutes() {
 	app.Http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotImplemented)
 		_, err := fmt.Fprint(w, "Not implemented")
+		app.Logger.Warn("error on write response", zap.Error(err))
+	})
+	app.Http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		info := map[string]string{
+			"service": "{{.Name}}",
+			"time": time.Now().String(),
+		}
+		err := json.NewEncoder(w).Encode(info)
 		app.Logger.Warn("error on write response", zap.Error(err))
 	})
 }
 
 // Start HTTP server
 func (app *Application) RunHttp() error {
-	app.defineHttpMethods()
+	app.registerRoutes()
 
 	app.WaitGroup.Add(1)
 	go func() {

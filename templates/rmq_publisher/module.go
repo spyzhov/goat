@@ -83,6 +83,7 @@ func (app *Application) setPublisher(publisher **RabbitMq, address string) (err 
 			}
 		}
 	}()
+
 	defer func() {
 		if app.Publisher != nil && app.Publisher.Channel != nil {
 			if err := app.Publisher.Channel.Close(); err != nil {

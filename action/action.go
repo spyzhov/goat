@@ -4,6 +4,8 @@ import (
 	"errors"
 	"github.com/spyzhov/goat/console"
 	"github.com/spyzhov/goat/templates"
+	"github.com/spyzhov/goat/templates/clickhouse"
+	chMigrations "github.com/spyzhov/goat/templates/clickhouse/migrations"
 	"github.com/spyzhov/goat/templates/http"
 	"github.com/spyzhov/goat/templates/mysql"
 	myMigrations "github.com/spyzhov/goat/templates/mysql/migrations"
@@ -211,6 +213,8 @@ func (a *Action) getConfig() *templates.Config {
 			pgMigrations.New(),
 			mysql.New(),
 			myMigrations.New(),
+			clickhouse.New(),
+			chMigrations.New(),
 			http.New(),
 			prometheus.New(),
 			rmq_consumer.New(),

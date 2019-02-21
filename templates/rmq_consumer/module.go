@@ -121,6 +121,7 @@ func (app *Application) setConsumer(consumer **RabbitMq, address, exchange, queu
 			}
 		}
 	}()
+
 	defer func() {
 		if app.Consumer != nil && app.Consumer.Channel != nil {
 			if err := app.Consumer.Channel.Close(); err != nil {

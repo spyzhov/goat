@@ -3,11 +3,16 @@
 Goat is a simple `golang: application template` builder.
 
 Generate template of your application, via chosen templates:
-* RabbitMQ - consumer or publisher via [https://github.com/streadway/amqp](https://github.com/streadway/amqp);
-* Postgres - database via [https://github.com/go-pg](https://github.com/go-pg);
-* MySQL - database via [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql);
-* HTTP - http server via [https://golang.org/pkg/net/http](https://golang.org/pkg/net/http/);
-* Prometheus - prometheus endpoint `GET /metrics` via [https://github.com/prometheus/client_golang](https://github.com/prometheus/client_golang);
+* Message brokers:
+	* RabbitMQ - consumer or publisher via [https://github.com/streadway/amqp](https://github.com/streadway/amqp);
+* Databases:
+	* Postgres - database via [https://github.com/go-pg](https://github.com/go-pg) + migrations;
+	* MySQL - database via [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql) + migrations;
+	* ClickHouse - database via [github.com/kshvakov/clickhouse](https://github.com/kshvakov/clickhouse) + migrations;
+* Web-Servers:
+	* HTTP - http server via [https://golang.org/pkg/net/http](https://golang.org/pkg/net/http/);
+* Metrics:
+	* Prometheus - prometheus endpoint `GET /metrics` via [https://github.com/prometheus/client_golang](https://github.com/prometheus/client_golang);
 
 # Installation
 
@@ -30,6 +35,8 @@ Use Postgres connection (github.com/go-pg)? [y/N]: y
 Use Postgres migrations (github.com/go-pg/migrations)? [y/N]: y
 Use MySQL connection (github.com/go-sql-driver/mysql)? [y/N]: y
 Use MySQL migrations (github.com/rubenv/sql-migrate)? [y/N]: y
+Use ClickHouse connection (github.com/kshvakov/clickhouse)? [y/N]: y
+Use ClickHouse migrations (github.com/golang-migrate/migrate)? [y/N]: y
 Use HTTP server (net/http)? [y/N]: y
 Use Prometheus (github.com/prometheus/client_golang)? [y/N]: y
 Use RMQ-consumer (github.com/streadway/amqp)? [y/N]: y
@@ -51,10 +58,17 @@ And you will got :
 ├── main.go
 ├── migrations
 │   ├── 01_init.go
+│   ├── clickhouse
+│   │   ├── 1-init.down.sql
+│   │   └── 1-init.up.sql
 │   ├── mysql
 │   │   └── 1-init.sql
+│   ├── clickhouse.go
 │   ├── mysql.go
-│   └── postgres.go
+│   ├── postgres.go
+│   └── source
+│       └── packr
+│           └── packr.go
 ├── README.md
 └── signals
     └── signals.go

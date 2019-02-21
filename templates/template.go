@@ -48,6 +48,7 @@ type Library struct {
 	Alias   string
 	Repo    string
 	Version string
+	Branch  string
 }
 
 type (
@@ -289,14 +290,18 @@ func (libs Libraries) String() string {
 func (libs Libraries) Dep() string {
 	parts := make([]string, 0, len(libs))
 	for _, l := range libs {
-		if l.Version != "" {
+		if l.Version != "" || l.Branch != "" {
 			repo := l.Repo
+			bound, version := "version", l.Version
 			if repo == "" {
 				repo = l.Name
 			}
+			if version == "" {
+				bound, version = "branch", l.Branch
+			}
 			parts = append(parts, `[[constraint]]
   name = "`+repo+`"
-  version = "`+l.Version+`"
+  `+bound+` = "`+version+`"
 `)
 		}
 	}

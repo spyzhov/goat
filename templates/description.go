@@ -142,23 +142,22 @@ func (app *Application) Run() {
 func (app *Application) Stop() {
 	app.Logger.Info("service stopping...")
 	app.ctxCancel()
-	wait := make(chan bool)
-	timer := time.NewTimer(5 * time.Second)
-	defer timer.Stop()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
 	go func() {
+		defer cancel()
 		app.WaitGroup.Wait()
-		wait <- true
 	}()
 
 	select {
-	case <-timer.C:
-		app.Logger.Panic("service stopped with timeout")
-	case <-wait:
-		app.Logger.Info("service stopped with success")
+	case <-ctx.Done():
+		if ctx.Err() != context.Canceled {
+			app.Logger.Panic("service stopped with timeout")
+		} else {
+			app.Logger.Info("service stopped with success")
+		}
 	}
 }
-
 {{.SetterFunction}}
 `,
 				"signals/signals.go": `package signals
