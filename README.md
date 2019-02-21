@@ -91,13 +91,15 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
 
 # TODO
 
-- [ ] validation for path;
-- [x] add versions for libs;
-- [ ] add choice for http clients (native/fasthttp/echo/etc.);
-- [x] remove code "noodles" - make module append methods;
-- [ ] normalize migrations;
-- [ ] add Redis support `"github.com/gomodule/redigo/redis"`;
-- [x] add context & WaitGroups;
+- [ ] Misc:
+  - [ ] validation for path/name/etc.;
+  - [x] remove code "noodles" - make module append methods;
+  - [ ] normalize migrations;
+  - [x] add context & WaitGroups;
+- [ ] Libraries:
+  - [ ] add choice for http clients (native/fasthttp/echo/etc.);
+  - [ ] add Redis support `"github.com/gomodule/redigo/redis"`;
 - [ ] Dependencies:
   - [x] add `dep` support;
   - [ ] add `go mod` support;
+  - [x] add versions for libs;
