@@ -73,15 +73,39 @@ func BlankFunctionMap(*Config) map[string]string {
 
 //region Template
 func (t *Template) Prompt() string {
-	return fmt.Sprintf("Use %s (%s)?", t.Name, t.Package)
+	verb := "Use"
+	if t.Select != nil {
+		verb = "Select"
+	}
+	if t.Package != "" {
+		return fmt.Sprintf("%s %s (%s)?", verb, t.Name, t.Package)
+	}
+	return fmt.Sprintf("%s %s?", verb, t.Name)
+}
+
+func (t *Template) Variants() (result []interface{}) {
+	result = make([]interface{}, len(t.Select))
+	for i, t := range t.Select {
+		result[i] = t.Prompt()
+	}
+	return result
 }
 
 //endregion
 //region Config
 func (c *Config) Init(console *console.Console) {
 	for _, tpl := range c.Templates {
-		if c.canPrompt(tpl) && console.Prompt(tpl.Prompt()) {
-			c.Install = append(c.Install, tpl)
+		if c.canPrompt(tpl) {
+			if tpl.Select == nil {
+				if console.Prompt(tpl.Prompt()) {
+					c.Install = append(c.Install, tpl)
+				}
+			} else {
+				if n := console.Select(tpl.Prompt(), tpl.Variants()...); n != 0 {
+					c.Install = append(c.Install, tpl)
+					c.Install = append(c.Install, tpl.Select[n-1])
+				}
+			}
 		}
 	}
 }
@@ -286,6 +310,13 @@ func (libs Libraries) String() string {
 	}
 	return join(parts, "\n")
 }
+func (libs Libraries) Interface() []interface{} {
+	result := make([]interface{}, len(libs))
+	for i, l := range libs {
+		result[i] = l
+	}
+	return result
+}
 
 func (libs Libraries) Dep() string {
 	parts := make([]string, 0, len(libs))
@@ -358,6 +389,13 @@ func appendIf(array []string, value string) []string {
 		return append(array, value)
 	}
 	return array
+}
+
+func Str(isSuccess bool, success, not string) string {
+	if isSuccess {
+		return success
+	}
+	return not
 }
 
 //endregion

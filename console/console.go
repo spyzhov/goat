@@ -43,14 +43,13 @@ func (c *Console) PromptY(ask string, args ...interface{}) bool {
 
 func (c *Console) PromptInt(ask string, max int, args ...interface{}) int {
 	for {
-		args = append(args, max)
-		str, err := c.Scanln(ask+" [0-%d]: ", args...)
+		str, err := c.Scanln(ask+" [0-%d]: ", append(args, max)...)
 		if err != nil {
 			panic(err)
 		}
 		str = strings.TrimSpace(str)
 		if str == "" {
-			continue
+			return 0
 		}
 		result, err := strconv.Atoi(str)
 		if err != nil {
@@ -66,5 +65,16 @@ func (c *Console) PromptInt(ask string, max int, args ...interface{}) int {
 			continue
 		}
 		return result
+	}
+}
+
+func (c *Console) Select(ask string, args ...interface{}) int {
+	for {
+		str := ask + "\n"
+		for i := len(args); i > 0; i-- {
+			str += fmt.Sprintf("%2d) %s\n", i, args[i-1])
+		}
+		str += " 0) No one...\nPlease, select"
+		return c.PromptInt(str, len(args))
 	}
 }

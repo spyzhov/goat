@@ -7,7 +7,7 @@ func New() *templates.Template {
 		ID:           "prometheus",
 		Name:         "Prometheus",
 		Package:      "github.com/prometheus/client_golang",
-		Dependencies: []string{"http"},
+		Dependencies: []string{"webserver"},
 
 		Environments: []*templates.Environment{},
 		Properties:   []*templates.Property{},
@@ -17,26 +17,66 @@ func New() *templates.Template {
 		Models: map[string]string{},
 
 		TemplateSetter: func(config *templates.Config) (s string) {
-			s = `
+			if config.IsEnabled("http") {
+				s = `
 	if err = app.setPrometheus(); err != nil {
 		logger.Panic("cannot register Prometheus", zap.Error(err))
 		return nil, err
 	}`
+			}
 			return
 		},
 		TemplateSetterFunction: func(config *templates.Config) (s string) {
-			s = `
+			if config.IsEnabled("http") {
+				s = `
 // Set metrics
 func (app *Application) setPrometheus() error {
 	app.Logger.Debug("Prometheus registered")
 	app.Http.Handle("/metrics", promhttp.Handler())
 	return nil
 }`
+			}
 			return
 		},
 		TemplateRunFunction: templates.BlankFunction,
 		TemplateClosers:     templates.BlankFunction,
 
-		Templates: templates.BlankFunctionMap,
+		Templates: func(config *templates.Config) (strings map[string]string) {
+			strings = map[string]string{}
+			if config.IsEnabled("fasthttp") {
+				strings["metrics/metrics.go"] = `package metrics
+
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	"strconv"
+)
+
+var (
+	RequestTotal = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "http_request_count_total",
+		Help: "Count of online connections",
+	})
+	RequestStatus = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "http_request_status_total",
+		Help: "Requests status",
+	}, []string{"method", "code"})
+)
+
+func init() {
+	prometheus.MustRegister(RequestTotal)
+	prometheus.MustRegister(RequestStatus)
+}
+
+func RequestInc() {
+	RequestTotal.Inc()
+}
+
+func RequestStatusInc(method string, code int) {
+	RequestStatus.WithLabelValues(method, strconv.Itoa(code)).Inc()
+}
+`
+			}
+			return
+		},
 	}
 }

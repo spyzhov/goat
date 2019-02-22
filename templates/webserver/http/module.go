@@ -8,9 +8,7 @@ func New() *templates.Template {
 		Name:    "HTTP server",
 		Package: "net/http",
 
-		Environments: []*templates.Environment{
-			{Name: "Port", Type: "int", Env: "PORT", Default: "4000"},
-		},
+		Environments: []*templates.Environment{},
 		Properties: []*templates.Property{
 			{Name: "Http", Type: "*http.ServeMux", Default: "http.NewServeMux()"},
 		},
@@ -81,7 +79,7 @@ func (app *Application) RunHttp() error {
 		go func() {
 			defer app.WaitGroup.Done()
 			app.Error <- server.ListenAndServe()
-			app.Logger.Debug("http server ListenAndServe stops")
+			app.Logger.Debug("http server stops serve")
 		}()
 
 		select {
