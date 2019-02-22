@@ -47,8 +47,9 @@ import (
 func (app *Application) registerRoutes() {
 	app.Http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotImplemented)
-		_, err := fmt.Fprint(w, "Not implemented")
-		app.Logger.Warn("error on write response", zap.Error(err))
+		if _, err := fmt.Fprint(w, "Not implemented"); err != nil {
+			app.Logger.Warn("error on write response", zap.Error(err))
+		}
 	})
 	app.Http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -56,8 +57,9 @@ func (app *Application) registerRoutes() {
 			"service": "{{.Name}}",
 			"time":    time.Now().String(),
 		}
-		err := json.NewEncoder(w).Encode(info)
-		app.Logger.Warn("error on write response", zap.Error(err))
+		if err := json.NewEncoder(w).Encode(info); err != nil {
+			app.Logger.Warn("error on write response", zap.Error(err))
+		}
 	})
 }
 
