@@ -96,10 +96,17 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
   - [x] remove code "noodles" - make module append methods;
   - [ ] normalize migrations;
   - [x] add context & WaitGroups;
+  - [ ] add help / description for every type of templates;
+  - [ ] add example-templates;
+  - [ ] remove vendor dependencies;
 - [ ] Libraries:
   - [ ] add choice for http clients (native/fasthttp/echo/etc.);
   - [ ] add Redis support `"github.com/gomodule/redigo/redis"`;
+  - [ ] add clear TCP connect support;
 - [ ] Dependencies:
   - [x] add `dep` support;
   - [ ] add `go mod` support;
   - [x] add versions for libs;
+- [ ] Service type:
+  - [x] daemon;
+  - [ ] console;
