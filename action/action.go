@@ -56,6 +56,9 @@ func New(c *cli.Context) *Action {
 		Context: c,
 		Console: console.New(),
 	}
+	if _, err = a.Console.Print(console.Wrap("Select environment:", console.OkGreen)); err != nil {
+		log.Fatal(err)
+	}
 	// region Debug
 	if err = a.setDebug(); err != nil {
 		log.Fatal(err)
@@ -148,6 +151,9 @@ func (a *Action) setRepo() (err error) {
 
 func (a *Action) Invoke() (err error) {
 	a.log("start to generate")
+	if _, err = a.Console.Print(console.Wrap("Select packages:", console.OkGreen)); err != nil {
+		log.Fatal(err)
+	}
 	a.Config = a.getConfig()
 	context := &Context{
 		Env:            a.getEnvironments(),
@@ -189,6 +195,12 @@ func (a *Action) Invoke() (err error) {
 		}
 	}
 
+	if _, err = a.Console.Print(console.Wrap("Done!", console.OkGreen)); err != nil {
+		log.Fatal(err)
+	}
+	if _, err = a.Console.Print("Don't forget to run: %s", console.Wrap("dep ensure", console.Bold)); err != nil {
+		log.Fatal(err)
+	}
 	return
 }
 

@@ -78,7 +78,7 @@ func (t *Template) Prompt() string {
 		verb = "Select"
 	}
 	if t.Package != "" {
-		return fmt.Sprintf("%s %s (%s)?", verb, t.Name, t.Package)
+		return fmt.Sprintf("%s %s (%s)?", verb, t.Name, console.Wrap(t.Package, console.Underline))
 	}
 	return fmt.Sprintf("%s %s?", verb, t.Name)
 }
