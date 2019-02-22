@@ -101,7 +101,10 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
   - [ ] remove vendor dependencies;
   - [x] add colors for a dialog;
 - [ ] Libraries:
-  - [ ] add choice for http clients (native/fasthttp/echo/etc.);
+  - [ ] add choice for http clients:
+    - [x] native;
+    - [x] fasthttp;
+    - [ ] echo;
   - [ ] add Redis support `"github.com/gomodule/redigo/redis"`;
   - [ ] add clear TCP connect support;
 - [ ] Dependencies:
