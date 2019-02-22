@@ -12,10 +12,32 @@ type Console struct {
 	input *bufio.Reader
 }
 
+// Colors
+const (
+	//Header    = "\033[95m"
+	//OkBlue    = "\033[94m"
+	OkGreen = "\033[92m"
+	//Warning   = "\033[93m"
+	//Fail      = "\033[91m"
+	EndColor  = "\033[0m"
+	Bold      = "\033[1m"
+	Underline = "\033[4m"
+)
+
+const (
+	defaultN = "[y/" + Bold + "N" + EndColor + "]"
+	defaultY = "[" + Bold + "Y" + EndColor + "/n]"
+	default0 = "[" + Bold + "0" + EndColor + "-%d]"
+)
+
 func New() *Console {
 	return &Console{
 		input: bufio.NewReader(os.Stdin),
 	}
+}
+
+func (c *Console) Print(ask string, args ...interface{}) (int, error) {
+	return fmt.Printf(ask+"\n", args...)
 }
 
 func (c *Console) Scanln(ask string, args ...interface{}) (string, error) {
@@ -26,7 +48,7 @@ func (c *Console) Scanln(ask string, args ...interface{}) (string, error) {
 }
 
 func (c *Console) Prompt(ask string, args ...interface{}) bool {
-	str, err := c.Scanln(ask+" [y/N]: ", args...)
+	str, err := c.Scanln(ask+" "+defaultN+": ", args...)
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +56,7 @@ func (c *Console) Prompt(ask string, args ...interface{}) bool {
 }
 
 func (c *Console) PromptY(ask string, args ...interface{}) bool {
-	str, err := c.Scanln(ask+" [Y/n]: ", args...)
+	str, err := c.Scanln(ask+" "+defaultY+": ", args...)
 	if err != nil {
 		panic(err)
 	}
@@ -43,14 +65,13 @@ func (c *Console) PromptY(ask string, args ...interface{}) bool {
 
 func (c *Console) PromptInt(ask string, max int, args ...interface{}) int {
 	for {
-		args = append(args, max)
-		str, err := c.Scanln(ask+" [0-%d]: ", args...)
+		str, err := c.Scanln(ask+" "+default0+": ", append(args, max)...)
 		if err != nil {
 			panic(err)
 		}
 		str = strings.TrimSpace(str)
 		if str == "" {
-			continue
+			return 0
 		}
 		result, err := strconv.Atoi(str)
 		if err != nil {
@@ -67,4 +88,19 @@ func (c *Console) PromptInt(ask string, max int, args ...interface{}) int {
 		}
 		return result
 	}
+}
+
+func (c *Console) Select(ask string, args ...interface{}) int {
+	for {
+		str := ask + "\n"
+		for i := len(args); i > 0; i-- {
+			str += fmt.Sprintf("%2d) %s\n", i, args[i-1])
+		}
+		str += " 0) No one...\nPlease, select"
+		return c.PromptInt(str, len(args))
+	}
+}
+
+func Wrap(msg string, color string) string {
+	return color + msg + EndColor
 }

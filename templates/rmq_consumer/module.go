@@ -192,7 +192,13 @@ func (app *Application) RunConsumer(consumer *RabbitMq, queue string) (err error
 
 func (app *Application) consumerHandle(msg *amqp.Delivery) {
 	//TODO: Implement me
-	msg.Ack(false)
+	defer func() {
+		if err := msg.Ack(false); err != nil {
+			app.Logger.Warn("error on ACK message", 
+				zap.Error(err), 
+				zap.Uint64("delivery_tag", msg.DeliveryTag))
+		}
+	}()
 }
 `,
 			}

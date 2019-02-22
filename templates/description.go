@@ -68,8 +68,13 @@ func NewConfig() (cfg *Config, err error) {
 				"app/logger.go": `package app
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 )
+
+type Logger struct {
+	logger *zap.Logger
+}
 
 func NewLogger(level string) (*zap.Logger, error) {
 	cfg := zap.NewProductionConfig()
@@ -84,6 +89,14 @@ func NewLogger(level string) (*zap.Logger, error) {
 	cfg.Level = atom
 
 	return cfg.Build()
+}
+
+func (l *Logger) Printf(format string, args ...interface{}) {
+	l.logger.Warn(fmt.Sprintf(format, args...))
+}
+
+func (l *Logger) Println(v ...interface{}) {
+	l.logger.Warn(fmt.Sprint(v...))
 }
 `,
 				"app/app.go": `package app

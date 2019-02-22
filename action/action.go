@@ -6,7 +6,6 @@ import (
 	"github.com/spyzhov/goat/templates"
 	"github.com/spyzhov/goat/templates/clickhouse"
 	chMigrations "github.com/spyzhov/goat/templates/clickhouse/migrations"
-	"github.com/spyzhov/goat/templates/http"
 	"github.com/spyzhov/goat/templates/mysql"
 	myMigrations "github.com/spyzhov/goat/templates/mysql/migrations"
 	"github.com/spyzhov/goat/templates/postgres"
@@ -14,6 +13,7 @@ import (
 	"github.com/spyzhov/goat/templates/prometheus"
 	"github.com/spyzhov/goat/templates/rmq_consumer"
 	"github.com/spyzhov/goat/templates/rmq_publisher"
+	"github.com/spyzhov/goat/templates/webserver"
 	"github.com/urfave/cli"
 	"log"
 	"os"
@@ -55,6 +55,9 @@ func New(c *cli.Context) *Action {
 	a := &Action{
 		Context: c,
 		Console: console.New(),
+	}
+	if _, err = a.Console.Print(console.Wrap("Select environment:", console.OkGreen)); err != nil {
+		log.Fatal(err)
 	}
 	// region Debug
 	if err = a.setDebug(); err != nil {
@@ -148,6 +151,9 @@ func (a *Action) setRepo() (err error) {
 
 func (a *Action) Invoke() (err error) {
 	a.log("start to generate")
+	if _, err = a.Console.Print(console.Wrap("Select packages:", console.OkGreen)); err != nil {
+		log.Fatal(err)
+	}
 	a.Config = a.getConfig()
 	context := &Context{
 		Env:            a.getEnvironments(),
@@ -189,6 +195,12 @@ func (a *Action) Invoke() (err error) {
 		}
 	}
 
+	if _, err = a.Console.Print(console.Wrap("Done!", console.OkGreen)); err != nil {
+		log.Fatal(err)
+	}
+	if _, err = a.Console.Print("Don't forget to run: %s", console.Wrap("dep ensure", console.Bold)); err != nil {
+		log.Fatal(err)
+	}
 	return
 }
 
@@ -215,7 +227,7 @@ func (a *Action) getConfig() *templates.Config {
 			myMigrations.New(),
 			clickhouse.New(),
 			chMigrations.New(),
-			http.New(),
+			webserver.New(),
 			prometheus.New(),
 			rmq_consumer.New(),
 			rmq_publisher.New(),
@@ -243,7 +255,16 @@ func (a *Action) getPropertiesValue() string {
 
 func (a *Action) getLibraries() string {
 	a.log("lib: start")
-	return a.Config.Libraries().String()
+	libs := a.Config.Libraries()
+	if a.Config.IsEnabled("fasthttp") { // FIXME: chose correct way to do it
+		index := find(func(i interface{}) bool {
+			return i.(*templates.Library).Name == "github.com/prometheus/client_golang/prometheus/promhttp"
+		}, libs.Interface()...)
+		if index != -1 {
+			libs = append(libs[:index], libs[index+1:]...)
+		}
+	}
+	return libs.String()
 }
 
 func (a *Action) getDepLibraries() string {
@@ -279,4 +300,13 @@ func (a *Action) getModels() string {
 func (a *Action) getTemplateFiles() map[string]string {
 	a.log("files: start")
 	return a.Config.TemplateFiles()
+}
+
+func find(check func(interface{}) bool, args ...interface{}) int {
+	for i, s := range args {
+		if check(s) {
+			return i
+		}
+	}
+	return -1
 }

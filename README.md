@@ -99,6 +99,7 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
   - [ ] add help / description for every type of templates;
   - [ ] add example-templates;
   - [ ] remove vendor dependencies;
+  - [x] add colors for a dialog;
 - [ ] Libraries:
   - [ ] add choice for http clients (native/fasthttp/echo/etc.);
   - [ ] add Redis support `"github.com/gomodule/redigo/redis"`;
