@@ -55,7 +55,7 @@ func (app *Application) registerRoutes() {
 		w.WriteHeader(http.StatusOK)
 		info := map[string]string{
 			"service": "{{.Name}}",
-			"time":    time.Now().String(),
+			"time":    time.Now().Format(time.RFC3339),
 		}
 		if err := json.NewEncoder(w).Encode(info); err != nil {
 			app.Logger.Warn("error on write response", zap.Error(err))
