@@ -4,6 +4,8 @@ import (
 	"errors"
 	"github.com/spyzhov/goat/console"
 	"github.com/spyzhov/goat/templates"
+	"github.com/spyzhov/goat/templates/clickhouse"
+	chMigrations "github.com/spyzhov/goat/templates/clickhouse/migrations"
 	"github.com/spyzhov/goat/templates/http"
 	"github.com/spyzhov/goat/templates/mysql"
 	myMigrations "github.com/spyzhov/goat/templates/mysql/migrations"
@@ -36,6 +38,7 @@ type Context struct {
 	Repo           string
 	Repos          string
 	Runners        string
+	Closers        string
 	Setter         string
 	SetterFunction string
 	Props          string
@@ -152,6 +155,7 @@ func (a *Action) Invoke() (err error) {
 		Repo:           a.Repo,
 		Repos:          render("repos", a.getLibraries(), a),
 		Runners:        a.getTemplateRunFunctions(),
+		Closers:        a.getTemplateClosers(),
 		Setter:         a.getTemplateSetters(),
 		SetterFunction: a.getTemplateSetterFunction(),
 		Props:          a.getProperties(),
@@ -209,6 +213,8 @@ func (a *Action) getConfig() *templates.Config {
 			pgMigrations.New(),
 			mysql.New(),
 			myMigrations.New(),
+			clickhouse.New(),
+			chMigrations.New(),
 			http.New(),
 			prometheus.New(),
 			rmq_consumer.New(),
@@ -248,6 +254,11 @@ func (a *Action) getDepLibraries() string {
 func (a *Action) getTemplateRunFunctions() string {
 	a.log("runners: start")
 	return a.Config.TemplateRunFunctions().String()
+}
+
+func (a *Action) getTemplateClosers() string {
+	a.log("closers: start")
+	return a.Config.TemplateClosers().String()
 }
 
 func (a *Action) getTemplateSetters() string {

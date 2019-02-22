@@ -4,18 +4,14 @@ import "github.com/spyzhov/goat/templates"
 
 func New() *templates.Template {
 	return &templates.Template{
-		ID:      "prometheus",
-		Name:    "Prometheus",
-		Package: "github.com/prometheus/client_golang",
+		ID:           "prometheus",
+		Name:         "Prometheus",
+		Package:      "github.com/prometheus/client_golang",
+		Dependencies: []string{"http"},
 
-		Environments: []*templates.Environment{
-			{Name: "Port", Type: "int", Env: "PORT", Default: "4000"},
-		},
-		Properties: []*templates.Property{
-			{Name: "Http", Type: "*http.ServeMux", Default: "http.NewServeMux()"},
-		},
+		Environments: []*templates.Environment{},
+		Properties:   []*templates.Property{},
 		Libraries: []*templates.Library{
-			{Name: "net/http"},
 			{Name: "github.com/prometheus/client_golang/prometheus/promhttp", Repo: "github.com/prometheus/client_golang", Version: "^0.9.2"},
 		},
 		Models: map[string]string{},
@@ -31,47 +27,16 @@ func New() *templates.Template {
 		TemplateSetterFunction: func(config *templates.Config) (s string) {
 			s = `
 // Set metrics
-func (a *Application) setPrometheus() error {
-	a.Logger.Debug("Prometheus registered")
-	a.Http.Handle("/metrics", promhttp.Handler())
+func (app *Application) setPrometheus() error {
+	app.Logger.Debug("Prometheus registered")
+	app.Http.Handle("/metrics", promhttp.Handler())
 	return nil
 }`
 			return
 		},
-		TemplateRunFunction: func(config *templates.Config) (s string) {
-			if !config.IsEnabled("http") {
-				s = `	// Run HTTP Server
-	if err = application.RunHttp(); err != nil {
-		application.Logger.Panic("HTTP Server start error", zap.Error(err))
-	}`
-			}
-			return
-		},
+		TemplateRunFunction: templates.BlankFunction,
+		TemplateClosers:     templates.BlankFunction,
 
-		Templates: func(config *templates.Config) (strings map[string]string) {
-			strings = map[string]string{
-				"app/http.go": `package app
-
-import (
-	"fmt"
-	"net/http"
-	"strconv"
-)
-
-func (a *Application) RunHttp() error {
-	a.Http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Not implemented")
-		w.WriteHeader(http.StatusNotImplemented)
-	})
-	go func() {
-		a.Logger.Info("http server started on [::]:"+strconv.Itoa(a.Config.Port))
-		a.Error <- http.ListenAndServe(":"+strconv.Itoa(a.Config.Port), a.Http)
-	}()
-	return nil
-}
-`,
-			}
-			return
-		},
+		Templates: templates.BlankFunctionMap,
 	}
 }

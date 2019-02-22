@@ -13,46 +13,42 @@ func New() *Template {
 		Properties: []*Property{
 			{Name: "Logger", Type: "*zap.Logger", Default: "logger"},
 			{Name: "Config", Type: "*Config", Default: "config"},
-			{Name: "Error", Type: "chan error", Default: "make(chan error)"},
+			{Name: "Error", Type: "chan error", Default: "make(chan error, math.MaxUint8)"},
+			{Name: "Ctx", Type: "context.Context"},
+			{Name: "ctxCancel", Type: "context.CancelFunc"},
+			{Name: "WaitGroup", Type: "sync.WaitGroup"},
 		},
 		Libraries: []*Library{
 			{Name: "go.uber.org/zap", Version: "^1.9.1"},
+			{Name: "{{.Repo}}/signals"},
+			{Name: "math"},
+			{Name: "context"},
+			{Name: "sync"},
+			{Name: "time"},
 		},
 		Models: map[string]string{},
 
 		TemplateSetter:         BlankFunction,
 		TemplateSetterFunction: BlankFunction,
 		TemplateRunFunction:    BlankFunction,
+		TemplateClosers:        BlankFunction,
 
 		Templates: func(config *Config) (strings map[string]string) {
 			strings = map[string]string{
 				"main.go": `package main
 
 import (
-	"go.uber.org/zap"
 	"{{.Repo}}/app"
-	"{{.Repo}}/signals"
 )
 
 func main() {
-	var (
-		application *app.Application
-		err         error
-	)
-	if application, err = app.New(); err != nil {
+	if application, err := app.New(); err != nil {
 		panic(err)
-	}
-
-{{.Runners}}
-
-	select {
-	case err = <-application.Error:
-		application.Logger.Panic("service crashed", zap.Error(err))
-	case sig := <-signals.WaitExit():
-		application.Logger.Info("service stop", zap.Stringer("signal", sig))
+	} else {
+		defer application.Close()
+		application.Run()
 	}
 }
-
 `,
 				"app/config.go": `package app
 
@@ -64,16 +60,10 @@ type Config struct {
 {{.Env}}
 }
 
-func NewConfig() (*Config, error) {
-	var cfg Config
-
-	if err := env.Parse(&cfg); err != nil {
-		return &cfg, err
-	}
-
-	return &cfg, nil
+func NewConfig() (cfg *Config, err error) {
+	cfg = new(Config)
+	return cfg, env.Parse(cfg)
 }
-
 `,
 				"app/logger.go": `package app
 
@@ -95,7 +85,6 @@ func NewLogger(level string) (*zap.Logger, error) {
 
 	return cfg.Build()
 }
-
 `,
 				"app/app.go": `package app
 
@@ -120,9 +109,51 @@ func New() (*Application, error) {
 	app := &Application{
 {{.PropsValue}}
 	}
+	app.Ctx, app.ctxCancel = context.WithCancel(context.Background())
 {{.Setter}}
 
 	return app, nil
+}
+
+func (app *Application) Close() {
+	app.Logger.Debug("Application stops")
+{{.Closers}}
+}
+
+func (app *Application) Run() {
+	var err error
+	defer app.Stop()
+
+{{.Runners}}
+
+	select {
+	case err = <-app.Error:
+		app.Logger.Panic("service crashed", zap.Error(err))
+	case <-app.Ctx.Done():
+		app.Logger.Error("service stops via context")
+	case sig := <-signals.WaitExit():
+		app.Logger.Info("service stop", zap.Stringer("signal", sig))
+	}
+}
+
+func (app *Application) Stop() {
+	app.Logger.Info("service stopping...")
+	app.ctxCancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+	go func() {
+		defer cancel()
+		app.WaitGroup.Wait()
+	}()
+
+	select {
+	case <-ctx.Done():
+		if ctx.Err() != context.Canceled {
+			app.Logger.Panic("service stopped with timeout")
+		} else {
+			app.Logger.Info("service stopped with success")
+		}
+	}
 }
 {{.SetterFunction}}
 `,
@@ -141,23 +172,22 @@ func WaitExit() chan os.Signal {
 
 	return sigs
 }
-
 `,
 				"Dockerfile": `FROM alpine:latest as alpine
 RUN apk --no-cache add tzdata zip ca-certificates
 WORKDIR /usr/share/zoneinfo
-# -0 means no compression.  Needed because go's
+# -0 means no compression. Needed because go's
 # tz loader doesn't handle compressed data.
 RUN zip -r -0 /zoneinfo.zip .
 
-FROM golang:1.10 AS builder
+FROM golang:1.11 AS builder
 # build via packr hard way https://github.com/gobuffalo/packr#building-a-binary-the-hard-way
 RUN go get -u github.com/gobuffalo/packr/...
 WORKDIR /go/src/{{.Repo}}
 ADD . .
-RUN packr
-RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/{{.Name}} .
-RUN packr clean
+RUN packr && \
+	CGO_ENABLED=0 GOOS=linux go build -o /go/bin/{{.Name}} . && \
+	packr clean
 
 FROM scratch
 # configurations

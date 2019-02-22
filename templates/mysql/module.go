@@ -24,7 +24,7 @@ func New() *templates.Template {
 
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
-	if err = app.setDataBaseMySQL(&app.MySQL); err != nil {
+	if err = app.setDataBaseMySQL(); err != nil {
 		logger.Panic("cannot connect to MySQL", zap.Error(err))
 		return nil, err
 	}`
@@ -33,19 +33,30 @@ func New() *templates.Template {
 		TemplateSetterFunction: func(config *templates.Config) (s string) {
 			s = `
 // MySQL connect
-func (a *Application) setDataBaseMySQL(db **sql.DB) (err error) {
-	a.Logger.Debug("MySQL connect", zap.String("connect", a.Config.MySQLConnect))
-	*db, err = sql.Open("mysql", a.Config.MySQLConnect)
+func (app *Application) setDataBaseMySQL() (err error) {
+	app.Logger.Debug("MySQL connect", zap.String("connect", app.Config.MySQLConnect))
+	app.MySQL, err = sql.Open("mysql", app.Config.MySQLConnect)
 	if err != nil {
 		return
 	}
-	a.MySQL.SetMaxOpenConns(a.Config.MySQLMaxConnections)
-	a.MySQL.SetMaxIdleConns(a.Config.MySQLIdleConnections)
+	app.MySQL.SetMaxOpenConns(app.Config.MySQLMaxConnections)
+	app.MySQL.SetMaxIdleConns(app.Config.MySQLIdleConnections)
 	return
 }`
 			return
 		},
 		TemplateRunFunction: templates.BlankFunction,
+		TemplateClosers: func(*templates.Config) (s string) {
+			s = `
+	defer func() {
+		if app.MySQL != nil {
+			if err := app.MySQL.Close(); err != nil {
+				app.Logger.Warn("error on MySQL connection close", zap.Error(err))
+			}
+		}
+	}()`
+			return
+		},
 
 		Templates: templates.BlankFunctionMap,
 	}

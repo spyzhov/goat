@@ -21,7 +21,7 @@ func New() *templates.Template {
 
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
-	if err = app.setDataBasePostgres(&app.Postgres); err != nil {
+	if err = app.setDataBasePostgres(); err != nil {
 		logger.Panic("cannot connect to Postgres", zap.Error(err))
 		return nil, err
 	}`
@@ -30,20 +30,31 @@ func New() *templates.Template {
 		TemplateSetterFunction: func(config *templates.Config) (s string) {
 			s = `
 // PG connect
-func (a *Application) setDataBasePostgres(db **pg.DB) error {
-	a.Logger.Debug("PG connect", zap.String("connect", a.Config.PgConnect))
+func (app *Application) setDataBasePostgres() error {
+	app.Logger.Debug("PG connect", zap.String("connect", app.Config.PgConnect))
 
-	options, err := pg.ParseURL(a.Config.PgConnect)
+	options, err := pg.ParseURL(app.Config.PgConnect)
 	if err != nil {
 		return err
 	}
 
-	*db = pg.Connect(options)
+	app.Postgres = pg.Connect(options)
 	return nil
 }`
 			return
 		},
 		TemplateRunFunction: templates.BlankFunction,
+		TemplateClosers: func(*templates.Config) (s string) {
+			s = `
+	defer func() {
+		if app.Postgres != nil {
+			if err := app.Postgres.Close(); err != nil {
+				app.Logger.Warn("error on Postgres connection close", zap.Error(err))
+			}
+		}
+	}()`
+			return
+		},
 
 		Templates: templates.BlankFunctionMap,
 	}

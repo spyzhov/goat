@@ -27,14 +27,15 @@ func New() *templates.Template {
 		TemplateSetterFunction: func(config *templates.Config) (s string) {
 			s = `
 // PG migrations up
-func (a *Application) migratePostgres() error {
-	a.Logger.Debug("PG migrate")
-	migrations.Postgres(a.Postgres, a.Logger)
+func (app *Application) migratePostgres() error {
+	app.Logger.Debug("PG migrate")
+	migrations.Postgres(app.Postgres, app.Logger)
 	return nil
 }`
 			return
 		},
 		TemplateRunFunction: templates.BlankFunction,
+		TemplateClosers:     templates.BlankFunction,
 
 		Templates: func(config *templates.Config) (strings map[string]string) {
 			strings = map[string]string{

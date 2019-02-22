@@ -40,8 +40,8 @@ type RabbitMq struct {
 		TemplateSetterFunction: func(config *templates.Config) (s string) {
 			s = `
 // RMQ set publisher
-func (a *Application) setPublisher(publisher **RabbitMq, address string) (err error) {
-	a.Logger.Debug("RabbitMQ publisher connect", zap.String("address", address))
+func (app *Application) setPublisher(publisher **RabbitMq, address string) (err error) {
+	app.Logger.Debug("RabbitMQ publisher connect", zap.String("address", address))
 	(*publisher).Connection, err = amqp.Dial(address)
 	if err != nil {
 		return err
@@ -55,10 +55,17 @@ func (a *Application) setPublisher(publisher **RabbitMq, address string) (err er
 	// OnClose
 	cerr := make(chan *amqp.Error)
 	(*publisher).Channel.NotifyClose(cerr)
+
+	app.WaitGroup.Add(1)
 	go func() {
-		err, ok := <-cerr
-		if ok {
-			a.Error <- errors.New(err.Error())
+		defer app.WaitGroup.Done()
+		select {
+		case <-app.Ctx.Done():
+			return
+		case err, ok := <-cerr:
+			if ok && err != nil {
+				app.Error <- errors.New(err.Error())
+			}
 		}
 	}()
 
@@ -67,6 +74,25 @@ func (a *Application) setPublisher(publisher **RabbitMq, address string) (err er
 			return
 		},
 		TemplateRunFunction: templates.BlankFunction,
+		TemplateClosers: func(*templates.Config) (s string) {
+			s = `
+	defer func() {
+		if app.Publisher != nil && app.Publisher.Connection != nil {
+			if err := app.Publisher.Connection.Close(); err != nil {
+				app.Logger.Warn("error on publisher connection close", zap.Error(err))
+			}
+		}
+	}()
+
+	defer func() {
+		if app.Publisher != nil && app.Publisher.Channel != nil {
+			if err := app.Publisher.Channel.Close(); err != nil {
+				app.Logger.Warn("error on publisher channel close", zap.Error(err))
+			}
+		}
+	}()`
+			return
+		},
 
 		Templates: func(config *templates.Config) (strings map[string]string) {
 			strings = map[string]string{
@@ -76,10 +102,10 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func (a *Application) publish(body []byte) error {
-	return a.Publisher.Channel.Publish(
-		a.Config.PublisherExchange,   // publish to an exchange
-		a.Config.PublisherRoutingKey, // routing to 0 or more queues
+func (app *Application) publish(body []byte) error {
+	return app.Publisher.Channel.Publish(
+		app.Config.PublisherExchange,   // publish to an exchange
+		app.Config.PublisherRoutingKey, // routing to 0 or more queues
 		false,                        // mandatory
 		false,                        // immediate
 		amqp.Publishing{
