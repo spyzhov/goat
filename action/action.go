@@ -255,6 +255,7 @@ func (a *Action) getTemplateRunFunctions() string {
 	a.log("runners: start")
 	return a.Config.TemplateRunFunctions().String()
 }
+
 func (a *Action) getTemplateClosers() string {
 	a.log("closers: start")
 	return a.Config.TemplateClosers().String()
