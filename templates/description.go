@@ -202,7 +202,7 @@ RUN packr && \
 	CGO_ENABLED=0 GOOS=linux go build -o /go/bin/{{.Name}} . && \
 	packr clean
 
-FROM scratch
+FROM busybox:latest
 # configurations
 EXPOSE 4000
 WORKDIR /root
