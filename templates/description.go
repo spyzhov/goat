@@ -16,7 +16,7 @@ func New() *Template {
 			{Name: "Error", Type: "chan error", Default: "make(chan error, math.MaxUint8)"},
 			{Name: "Ctx", Type: "context.Context"},
 			{Name: "ctxCancel", Type: "context.CancelFunc"},
-			{Name: "WaitGroup", Type: "sync.WaitGroup"},
+			{Name: "WaitGroup", Type: "*sync.WaitGroup", Default: "new(sync.WaitGroup)"},
 		},
 		Libraries: []*Library{
 			{Name: "go.uber.org/zap", Version: "^1.9.1"},
