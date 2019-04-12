@@ -37,10 +37,24 @@ Use MySQL connection (github.com/go-sql-driver/mysql)? [y/N]: y
 Use MySQL migrations (github.com/rubenv/sql-migrate)? [y/N]: y
 Use ClickHouse connection (github.com/kshvakov/clickhouse)? [y/N]: y
 Use ClickHouse migrations (github.com/golang-migrate/migrate)? [y/N]: y
-Use HTTP server (net/http)? [y/N]: y
+Select WebServer?
+ 2) Use FastHTTP server (github.com/valyala/fasthttp)?
+ 1) Use HTTP server (net/http)?
+ 0) No one...
+Please, select [0-2]: 1 
 Use Prometheus (github.com/prometheus/client_golang)? [y/N]: y
 Use RMQ-consumer (github.com/streadway/amqp)? [y/N]: y
 Use RMQ-publisher (github.com/streadway/amqp)? [y/N]: y
+Select AWS Lambda?
+ 7) Use SQS Events?
+ 6) Use SNS Events?
+ 5) Use SES Events?
+ 4) Use S3 Events?
+ 3) Use Config Events?
+ 2) Use API Gateway?
+ 1) Use Simple?
+ 0) No one...
+Please, select [0-7]: 7
 ```
 
 And you will got :
@@ -51,6 +65,8 @@ And you will got :
 │   ├── config.go
 │   ├── consumer.go
 │   ├── http.go
+│   ├── lambda.go
+│   ├── lambda_handle.go
 │   ├── logger.go
 │   └── publish.go
 ├── Dockerfile

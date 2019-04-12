@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/spyzhov/goat/console"
 	"github.com/spyzhov/goat/templates"
+	"github.com/spyzhov/goat/templates/aws_lambda"
 	"github.com/spyzhov/goat/templates/clickhouse"
 	chMigrations "github.com/spyzhov/goat/templates/clickhouse/migrations"
 	"github.com/spyzhov/goat/templates/mysql"
@@ -231,6 +232,7 @@ func (a *Action) getConfig() *templates.Config {
 			prometheus.New(),
 			rmq_consumer.New(),
 			rmq_publisher.New(),
+			aws_lambda.New(),
 		},
 		Install: []*templates.Template{templates.New()},
 	}
