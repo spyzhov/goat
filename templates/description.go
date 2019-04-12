@@ -112,9 +112,11 @@ type Application struct {
 
 func New() (*Application, error) {
 	config, err := NewConfig()
-	logger, _ := NewLogger(config.Level)
 	if err != nil {
-		logger.Panic("cannot parse config", zap.Error(err))
+		return nil, err
+	}
+	logger, err := NewLogger(config.Level)
+	if err != nil {
 		return nil, err
 	}
 	logger.Debug("debug mode on")
