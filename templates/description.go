@@ -125,6 +125,11 @@ func New() (*Application, error) {
 {{.PropsValue}}
 	}
 	app.Ctx, app.ctxCancel = context.WithCancel(context.Background())
+	defer func() {
+		if err != nil {
+			app.Close()
+		}
+	}()
 {{.Setter}}
 
 	return app, nil
