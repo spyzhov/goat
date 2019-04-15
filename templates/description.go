@@ -175,6 +175,12 @@ func (app *Application) Stop() {
 		}
 	}
 }
+
+func (app *Application) closer(scope string, closer io.Closer) {
+	if err := closer.Close(); err != nil {
+		app.Logger.Warn("closer error", zap.String("scope", scope), zap.Error(err))
+	}
+}
 {{.SetterFunction}}
 `,
 				"signals/signals.go": `package signals

@@ -48,9 +48,7 @@ func (app *Application) setDataBasePostgres() error {
 			s = `
 	defer func() {
 		if app.Postgres != nil {
-			if err := app.Postgres.Close(); err != nil {
-				app.Logger.Warn("error on Postgres connection close", zap.Error(err))
-			}
+			app.closer("Postgres connection", app.Postgres)
 		}
 	}()`
 			return

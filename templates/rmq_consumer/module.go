@@ -116,17 +116,13 @@ func (app *Application) setConsumer(consumer **RabbitMq, address, exchange, queu
 			s = `
 	defer func() {
 		if app.Consumer != nil && app.Consumer.Connection != nil {
-			if err := app.Consumer.Connection.Close(); err != nil {
-				app.Logger.Warn("error on consumer connection close", zap.Error(err))
-			}
+			app.closer("consumer connection", app.Consumer.Connection)
 		}
 	}()
 
 	defer func() {
 		if app.Consumer != nil && app.Consumer.Channel != nil {
-			if err := app.Consumer.Channel.Close(); err != nil {
-				app.Logger.Warn("error on consumer channel close", zap.Error(err))
-			}
+			app.closer("consumer channel", app.Consumer.Channel)
 		}
 	}()`
 			return
