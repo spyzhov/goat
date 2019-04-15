@@ -69,9 +69,9 @@ func (app *Application) RunLambda() error {
 		defer app.WaitGroup.Done()
 		app.Logger.Info("AWS-Lambda starts")
 
-		app.WaitGroup.Add(1)
+		// app.WaitGroup.Add(1)
 		go func() {
-			defer app.WaitGroup.Done()
+			// defer app.WaitGroup.Done()
 			lambda.Start(app.lambdaHandle)
 			app.Error <- errors.New("aws-lambda stops")
 		}()
@@ -79,7 +79,7 @@ func (app *Application) RunLambda() error {
 		select {
 		case <-app.Ctx.Done():
 			// todo: find the way to resolve lambda rpc.Accept releases
-			app.Logger.Warn("aws-lambda wasn't stop")
+			app.Logger.Warn("aws-lambda won't stop")
 			return
 		}
 	}()
