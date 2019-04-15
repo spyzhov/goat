@@ -25,10 +25,12 @@ func New() *templates.Template {
 			sqs_event.New(),
 		},
 
-		Environments: []*templates.Environment{},
-		Properties:   []*templates.Property{},
-		Libraries:    []*templates.Library{},
-		Models:       map[string]string{},
+		Environments: []*templates.Environment{
+			{Name: "LambdaServerPort", Type: "int", Env: "_LAMBDA_SERVER_PORT"},
+		},
+		Properties: []*templates.Property{},
+		Libraries:  []*templates.Library{},
+		Models:     map[string]string{},
 
 		TemplateSetter:         templates.BlankFunction,
 		TemplateSetterFunction: templates.BlankFunction,
@@ -62,8 +64,6 @@ import (
 
 // Start AWS-Lambda
 func (app *Application) RunLambda() error {
-	lambda.Start(app.lambdaHandle)
-
 	app.WaitGroup.Add(1)
 	go func() {
 		defer app.WaitGroup.Done()
