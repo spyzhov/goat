@@ -208,10 +208,12 @@ RUN zip -r -0 /zoneinfo.zip .
 
 FROM golang:1.11 AS builder
 # build via packr hard way https://github.com/gobuffalo/packr#building-a-binary-the-hard-way
-RUN go get -u github.com/gobuffalo/packr/...
+RUN go get -u github.com/gobuffalo/packr/... && \
+	go get -u github.com/golang/dep/cmd/dep
 WORKDIR /go/src/{{.Repo}}
 ADD . .
-RUN packr && \
+RUN dep ensure && \
+	packr && \
 	CGO_ENABLED=0 GOOS=linux go build -o /go/bin/{{.Name}} . && \
 	packr clean
 

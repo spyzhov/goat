@@ -123,7 +123,7 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
     - [ ] echo;
   - [ ] add Redis support `"github.com/gomodule/redigo/redis"`;
   - [ ] add clear TCP connect support;
-  - [ ] switch Postgres to `"github.com/lib/pq"`
+  - [ ] switch Postgres to `"github.com/lib/pq": "v1.0.0"`
 - [ ] Dependencies:
   - [x] add `dep` support;
   - [ ] add `go mod` support;
