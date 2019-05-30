@@ -10,7 +10,8 @@ import (
 	"github.com/spyzhov/goat/templates/mysql"
 	myMigrations "github.com/spyzhov/goat/templates/mysql/migrations"
 	"github.com/spyzhov/goat/templates/postgres"
-	pgMigrations "github.com/spyzhov/goat/templates/postgres/migrations"
+	pgGMigrations "github.com/spyzhov/goat/templates/postgres/go_pg/migrations"
+	pgLMigrations "github.com/spyzhov/goat/templates/postgres/lib_pg/migrations"
 	"github.com/spyzhov/goat/templates/prometheus"
 	"github.com/spyzhov/goat/templates/rmq_consumer"
 	"github.com/spyzhov/goat/templates/rmq_publisher"
@@ -223,15 +224,22 @@ func (a *Action) getConfig() *templates.Config {
 	conf := &templates.Config{
 		Templates: []*templates.Template{
 			postgres.New(),
-			pgMigrations.New(),
+			pgGMigrations.New(),
+			pgLMigrations.New(),
+
 			mysql.New(),
 			myMigrations.New(),
+
 			clickhouse.New(),
 			chMigrations.New(),
+
 			webserver.New(),
+
 			prometheus.New(),
+
 			rmq_consumer.New(),
 			rmq_publisher.New(),
+
 			aws_lambda.New(),
 		},
 		Install: []*templates.Template{templates.New()},

@@ -4,10 +4,10 @@ import "github.com/spyzhov/goat/templates"
 
 func New() *templates.Template {
 	return &templates.Template{
-		ID:           "postgres/migrations",
+		ID:           "go-postgres/migrations",
 		Name:         "Postgres migrations",
 		Package:      "github.com/go-pg/migrations",
-		Dependencies: []string{"postgres"},
+		Dependencies: []string{"go-postgres"},
 
 		Environments: []*templates.Environment{},
 		Properties:   []*templates.Property{},

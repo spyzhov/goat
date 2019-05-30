@@ -22,6 +22,7 @@ func New() *Template {
 			{Name: "go.uber.org/zap", Version: "^1.9.1"},
 			{Name: "{{.Repo}}/signals"},
 			{Name: "math"},
+			{Name: "io"},
 			{Name: "context"},
 			{Name: "sync"},
 			{Name: "time"},
