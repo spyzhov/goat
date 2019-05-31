@@ -16,6 +16,7 @@ type Template struct {
 	Name         string
 	Package      string
 	Dependencies []string
+	Conflicts    []string
 	Select       []*Template
 
 	Environments []*Environment
@@ -113,6 +114,11 @@ func (c *Config) Init(console *console.Console) {
 func (c *Config) canPrompt(tpl *Template) bool {
 	for _, tID := range tpl.Dependencies {
 		if !c.IsEnabled(tID) {
+			return false
+		}
+	}
+	for _, tID := range tpl.Conflicts {
+		if c.IsEnabled(tID) {
 			return false
 		}
 	}

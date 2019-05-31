@@ -48,7 +48,25 @@ type Context struct {
 	Models         string
 	DepLibs        string
 	MdCode         string
+	ServiceType    ServiceType
 }
+
+type ServiceType string
+
+const (
+	DaemonServiceType ServiceType = "daemon"
+	LambdaServiceType ServiceType = "lambda"
+)
+
+var (
+	RemoveLibs = map[string][]string{
+		"fasthttp":   {"github.com/prometheus/client_golang/prometheus/promhttp"},
+		"aws_lambda": {"{{.Repo}}/signals"},
+	}
+	RemoveFiles = map[string][]string{
+		"aws_lambda": {"signals/signals.go"},
+	}
+)
 
 type TemplateResponse string
 
@@ -171,6 +189,7 @@ func (a *Action) Invoke() (err error) {
 		Models:         a.getModels(),
 		DepLibs:        a.getDepLibraries(),
 		MdCode:         "```",
+		ServiceType:    a.getServiceType(),
 	}
 	files := make(map[string]*template.Template)
 	for name, content := range a.getTemplateFiles() {
@@ -223,6 +242,11 @@ func (a *Action) getConfig() *templates.Config {
 	a.log("generate config")
 	conf := &templates.Config{
 		Templates: []*templates.Template{
+			aws_lambda.New(),
+
+			webserver.New(),
+			prometheus.New(),
+
 			postgres.New(),
 			pgGMigrations.New(),
 			pgLMigrations.New(),
@@ -233,14 +257,8 @@ func (a *Action) getConfig() *templates.Config {
 			clickhouse.New(),
 			chMigrations.New(),
 
-			webserver.New(),
-
-			prometheus.New(),
-
 			rmq_consumer.New(),
 			rmq_publisher.New(),
-
-			aws_lambda.New(),
 		},
 		Install: []*templates.Template{templates.New()},
 	}
@@ -266,12 +284,16 @@ func (a *Action) getPropertiesValue() string {
 func (a *Action) getLibraries() string {
 	a.log("lib: start")
 	libs := a.Config.Libraries()
-	if a.Config.IsEnabled("fasthttp") { // FIXME: chose correct way to do it
-		index := find(func(i interface{}) bool {
-			return i.(*templates.Library).Name == "github.com/prometheus/client_golang/prometheus/promhttp"
-		}, libs.Interface()...)
-		if index != -1 {
-			libs = append(libs[:index], libs[index+1:]...)
+	for tID, names := range RemoveLibs {
+		if a.Config.IsEnabled(tID) {
+			for _, name := range names {
+				index := find(func(i interface{}) bool {
+					return i.(*templates.Library).Name == name
+				}, libs.Interface()...)
+				if index != -1 {
+					libs = append(libs[:index], libs[index+1:]...)
+				}
+			}
 		}
 	}
 	return libs.String()
@@ -280,6 +302,17 @@ func (a *Action) getLibraries() string {
 func (a *Action) getDepLibraries() string {
 	a.log("dep-lib: start")
 	return a.Config.Libraries().Dep()
+}
+
+func (a *Action) getServiceType() (serviceType ServiceType) {
+	a.log("service-type: start")
+	serviceType = DaemonServiceType
+	for _, pkg := range a.Config.Install {
+		if pkg.ID == "aws_lambda" {
+			serviceType = LambdaServiceType
+		}
+	}
+	return
 }
 
 func (a *Action) getTemplateRunFunctions() string {
@@ -309,7 +342,15 @@ func (a *Action) getModels() string {
 
 func (a *Action) getTemplateFiles() map[string]string {
 	a.log("files: start")
-	return a.Config.TemplateFiles()
+	files := a.Config.TemplateFiles()
+	for tID, names := range RemoveFiles {
+		if a.Config.IsEnabled(tID) {
+			for _, name := range names {
+				delete(files, name)
+			}
+		}
+	}
+	return files
 }
 
 func find(check func(interface{}) bool, args ...interface{}) int {

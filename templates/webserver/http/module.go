@@ -21,7 +21,7 @@ func New() *templates.Template {
 		TemplateSetterFunction: templates.BlankFunction,
 		TemplateRunFunction: func(config *templates.Config) (s string) {
 			s = `	// Run HTTP server
-	if err = app.RunHttp(); err != nil {
+	if err := app.RunHttp(); err != nil {
 		app.Logger.Panic("HTTP Server start error", zap.Error(err))
 	}`
 			return
@@ -82,14 +82,13 @@ func (app *Application) RunHttp() error {
 			app.Logger.Debug("http server stops serve")
 		}()
 
-		select {
-		case <-app.Ctx.Done():
-			if err := server.Close(); err != nil {
-				app.Logger.Error("http server close error", zap.Error(err))
-			}
-			app.Logger.Debug("http stops")
-			return
+		<-app.Ctx.Done()
+
+		if err := server.Close(); err != nil {
+			app.Logger.Error("http server close error", zap.Error(err))
 		}
+		app.Logger.Debug("http stops")
+		return
 	}()
 	return nil
 }

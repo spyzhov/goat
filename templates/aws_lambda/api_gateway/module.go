@@ -19,7 +19,7 @@ func New() *templates.Template {
 
 		Templates: func(config *templates.Config) (strings map[string]string) {
 			strings = map[string]string{
-				"app/lambda_handle.go": `package app
+				"app/lambda.go": `package app
 
 import (
 	"context"
@@ -28,7 +28,7 @@ import (
 )
 
 // TODO Implement AWS-Lambda Handler
-func (app *Application) lambdaHandle(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (app *Application) Lambda(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	fmt.Printf("Processing request data for request %s.\n", request.RequestContext.RequestID)
 	fmt.Printf("Body size = %d.\n", len(request.Body))
 

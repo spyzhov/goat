@@ -27,7 +27,7 @@ func New() *templates.Template {
 		TemplateSetterFunction: templates.BlankFunction,
 		TemplateRunFunction: func(config *templates.Config) (s string) {
 			s = `	// Run FastHTTP server
-	if err = app.RunFastHttp(); err != nil {
+	if err := app.RunFastHttp(); err != nil {
 		app.Logger.Panic("FastHTTP Server start error", zap.Error(err))
 	}`
 			return
@@ -69,14 +69,13 @@ func (app *Application) RunFastHttp() error {
 			app.Logger.Debug("fasthttp server stops serve")
 		}()
 
-		select {
-		case <-app.Ctx.Done():
-			if err := app.Http.Shutdown(); err != nil {
-				app.Logger.Error("fasthttp server close error", zap.Error(err))
-			}
-			app.Logger.Debug("fasthttp stops")
-			return
+		<-app.Ctx.Done()
+
+		if err := app.Http.Shutdown(); err != nil {
+			app.Logger.Error("fasthttp server close error", zap.Error(err))
 		}
+		app.Logger.Debug("fasthttp stops")
+		return
 	}()
 	return nil
 }

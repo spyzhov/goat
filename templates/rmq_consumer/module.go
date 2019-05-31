@@ -107,7 +107,7 @@ func (app *Application) setConsumer(consumer **RabbitMq, address, exchange, queu
 		},
 		TemplateRunFunction: func(config *templates.Config) (s string) {
 			s = `	// Run RabbitMQ Consumer
-	if err = app.RunConsumer(app.Consumer, app.Config.ConsumerQueue); err != nil {
+	if err := app.RunConsumer(app.Consumer, app.Config.ConsumerQueue); err != nil {
 		app.Logger.Panic("RabbitMQ consumer start error", zap.Error(err))
 	}`
 			return

@@ -47,7 +47,7 @@ func main() {
 		panic(err)
 	} else {
 		defer application.Close()
-		application.Run()
+		application.Start()
 	}
 }
 `,
@@ -141,39 +141,45 @@ func (app *Application) Close() {
 {{.Closers}}
 }
 
-func (app *Application) Run() {
-	var err error
+func (app *Application) Start() {
 	defer app.Stop()
 
 {{.Runners}}
+{{- if eq .ServiceType "lambda"}}
+
+	lambda.Start(app.Lambda)
+{{- else}}
 
 	select {
-	case err = <-app.Error:
+	case err := <-app.Error:
 		app.Logger.Panic("service crashed", zap.Error(err))
 	case <-app.Ctx.Done():
 		app.Logger.Error("service stops via context")
 	case sig := <-signals.WaitExit():
 		app.Logger.Info("service stop", zap.Stringer("signal", sig))
-	}
+	} {{- end}}
 }
 
 func (app *Application) Stop() {
 	app.Logger.Info("service stopping...")
 	app.ctxCancel()
+{{- if eq .ServiceType "lambda"}}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+{{- else}}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+{{- end}}
 
 	go func() {
 		defer cancel()
 		app.WaitGroup.Wait()
 	}()
 
-	select {
-	case <-ctx.Done():
-		if ctx.Err() != context.Canceled {
-			app.Logger.Panic("service stopped with timeout")
-		} else {
-			app.Logger.Info("service stopped with success")
-		}
+	<-ctx.Done()
+
+	if ctx.Err() != context.Canceled {
+		app.Logger.Panic("service stopped with timeout")
+	} else {
+		app.Logger.Info("service stopped with success")
 	}
 }
 
@@ -207,7 +213,7 @@ WORKDIR /usr/share/zoneinfo
 # tz loader doesn't handle compressed data.
 RUN zip -r -0 /zoneinfo.zip .
 
-FROM golang:1.11 AS builder
+FROM golang:1.12 AS builder
 # build via packr hard way https://github.com/gobuffalo/packr#building-a-binary-the-hard-way
 RUN go get -u github.com/gobuffalo/packr/... && \
 	go get -u github.com/golang/dep/cmd/dep
