@@ -14,6 +14,7 @@ func New() *templates.Template {
 			http.New(),
 			fasthttp.New(),
 		},
+		Conflicts: []string{"aws_lambda"},
 
 		Environments: []*templates.Environment{
 			{Name: "Port", Type: "int", Env: "PORT", Default: "4000"},

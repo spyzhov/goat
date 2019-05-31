@@ -19,7 +19,7 @@ func New() *templates.Template {
 
 		Templates: func(config *templates.Config) (strings map[string]string) {
 			strings = map[string]string{
-				"app/lambda_handle.go": `package app
+				"app/lambda.go": `package app
 
 import (
 	"context"
@@ -28,7 +28,7 @@ import (
 )
 
 // TODO Implement AWS-Lambda Handler
-func (app *Application) lambdaHandle(ctx context.Context, s3Event events.S3Event) {
+func (app *Application) Lambda(ctx context.Context, s3Event events.S3Event) {
 	for _, record := range s3Event.Records {
 		s3 := record.S3
 		fmt.Printf("[%s - %s] Bucket = %s, Key = %s \n", record.EventSource, record.EventTime, s3.Bucket.Name, s3.Object.Key) 
