@@ -30,7 +30,7 @@ func New() *templates.Template {
 			s = `
 // PG connect
 func (app *Application) setDataBasePostgres() error {
-	app.Logger.Debug("PG connect", zap.String("connect", app.Config.PgConnect))
+	app.Logger.Debug("PG connect")
 
 	options, err := pg.ParseURL(app.Config.PgConnect)
 	if err != nil {
@@ -45,11 +45,7 @@ func (app *Application) setDataBasePostgres() error {
 		TemplateRunFunction: templates.BlankFunction,
 		TemplateClosers: func(*templates.Config) (s string) {
 			s = `
-	defer func() {
-		if app.Postgres != nil {
-			app.Closer("Postgres connection", app.Postgres)
-		}
-	}()`
+	defer app.Closer(app.Postgres, "Postgres connection")`
 			return
 		},
 

@@ -48,7 +48,7 @@ func (app *Application) setRedis() (err error) {
 		},
 	}
 	conn := app.Redis.Get()
-	defer app.Closer("Redis connection", conn)
+	defer app.Closer(conn, "Redis connection")
 	_, err = conn.Do("PING")
 	return
 }`
@@ -57,11 +57,7 @@ func (app *Application) setRedis() (err error) {
 		TemplateRunFunction: templates.BlankFunction,
 		TemplateClosers: func(*templates.Config) (s string) {
 			s = `
-	defer func() {
-		if app.Redis != nil {
-			app.Closer("Redis connection", app.Redis)
-		}
-	}()`
+	defer app.Closer(app.Redis, "Redis connection")`
 			return
 		},
 

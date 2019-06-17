@@ -43,11 +43,7 @@ func (app *Application) setDataBasePostgres() (err error) {
 		TemplateRunFunction: templates.BlankFunction,
 		TemplateClosers: func(*templates.Config) (s string) {
 			s = `
-	defer func() {
-		if app.Postgres != nil {
-			app.Closer("Postgres connection", app.Postgres)
-		}
-	}()`
+	defer app.Closer(app.Postgres, "Postgres connection")`
 			return
 		},
 

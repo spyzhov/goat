@@ -114,17 +114,10 @@ func (app *Application) setConsumer(consumer **RabbitMq, address, exchange, queu
 		},
 		TemplateClosers: func(*templates.Config) (s string) {
 			s = `
-	defer func() {
-		if app.Consumer != nil && app.Consumer.Connection != nil {
-			app.Closer("consumer connection", app.Consumer.Connection)
-		}
-	}()
-
-	defer func() {
-		if app.Consumer != nil && app.Consumer.Channel != nil {
-			app.Closer("consumer channel", app.Consumer.Channel)
-		}
-	}()`
+	if app.Consumer != nil {
+		defer app.Closer(app.Consumer.Connection, "consumer connection")
+		defer app.Closer(app.Consumer.Channel, "consumer channel")
+	}`
 			return
 		},
 

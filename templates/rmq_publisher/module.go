@@ -76,17 +76,10 @@ func (app *Application) setPublisher(publisher **RabbitMq, address string) (err 
 		TemplateRunFunction: templates.BlankFunction,
 		TemplateClosers: func(*templates.Config) (s string) {
 			s = `
-	defer func() {
-		if app.Publisher != nil && app.Publisher.Connection != nil {
-			app.Closer("publisher connection", app.Publisher.Connection)
-		}
-	}()
-
-	defer func() {
-		if app.Publisher != nil && app.Publisher.Channel != nil {
-			app.Closer("publisher channel", app.Publisher.Channel)
-		}
-	}()`
+	if app.Publisher != nil {
+		defer app.Closer(app.Publisher.Connection, "publisher connection")
+		defer app.Closer(app.Publisher.Channel, "publisher channel")
+	}`
 			return
 		},
 
