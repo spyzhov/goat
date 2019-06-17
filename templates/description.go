@@ -183,7 +183,7 @@ func (app *Application) Stop() {
 	}
 }
 
-func (app *Application) closer(scope string, closer io.Closer) {
+func (app *Application) Closer(scope string, closer io.Closer) {
 	if err := closer.Close(); err != nil {
 		app.Logger.Warn("closer error", zap.String("scope", scope), zap.Error(err))
 	}

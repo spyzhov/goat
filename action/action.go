@@ -13,6 +13,7 @@ import (
 	pgGMigrations "github.com/spyzhov/goat/templates/postgres/go_pg/migrations"
 	pgLMigrations "github.com/spyzhov/goat/templates/postgres/lib_pg/migrations"
 	"github.com/spyzhov/goat/templates/prometheus"
+	"github.com/spyzhov/goat/templates/redis"
 	"github.com/spyzhov/goat/templates/rmq_consumer"
 	"github.com/spyzhov/goat/templates/rmq_publisher"
 	"github.com/spyzhov/goat/templates/webserver"
@@ -246,6 +247,8 @@ func (a *Action) getConfig() *templates.Config {
 
 			webserver.New(),
 			prometheus.New(),
+
+			redis.New(),
 
 			postgres.New(),
 			pgGMigrations.New(),

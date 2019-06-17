@@ -78,13 +78,13 @@ func (app *Application) setPublisher(publisher **RabbitMq, address string) (err 
 			s = `
 	defer func() {
 		if app.Publisher != nil && app.Publisher.Connection != nil {
-			app.closer("publisher connection", app.Publisher.Connection)
+			app.Closer("publisher connection", app.Publisher.Connection)
 		}
 	}()
 
 	defer func() {
 		if app.Publisher != nil && app.Publisher.Channel != nil {
-			app.closer("publisher channel", app.Publisher.Channel)
+			app.Closer("publisher channel", app.Publisher.Channel)
 		}
 	}()`
 			return

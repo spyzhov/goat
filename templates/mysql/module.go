@@ -50,7 +50,7 @@ func (app *Application) setDataBaseMySQL() (err error) {
 			s = `
 	defer func() {
 		if app.MySQL != nil {
-			app.closer("MySQL connection", app.MySQL)
+			app.Closer("MySQL connection", app.MySQL)
 		}
 	}()`
 			return

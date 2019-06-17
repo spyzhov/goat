@@ -45,7 +45,7 @@ func (app *Application) setDataBasePostgres() (err error) {
 			s = `
 	defer func() {
 		if app.Postgres != nil {
-			app.closer("Postgres connection", app.Postgres)
+			app.Closer("Postgres connection", app.Postgres)
 		}
 	}()`
 			return
