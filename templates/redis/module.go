@@ -37,7 +37,19 @@ func (app *Application) setRedis() (err error) {
 	app.Redis = &redis.Pool{
 		MaxIdle: app.Config.RedisIdleConnections,
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", app.Config.RedisConnect, redis.DialDatabase(app.Config.RedisDatabase))
+			c, err := redis.Dial("tcp", app.Config.RedisConnect)
+			if err != nil {
+				return nil, err
+			}
+			// if _, err := c.Do("AUTH", app.Config.RedisPassword); err != nil {
+			// 	app.Closer(c, "Redis connection")
+			// 	return nil, err
+			// }
+			if _, err := c.Do("SELECT", app.Config.RedisDatabase); err != nil {
+				app.Closer(c, "Redis connection")
+				return nil, err
+			}
+			return c, nil
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			if time.Since(t) < time.Minute {
