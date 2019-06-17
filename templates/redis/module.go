@@ -35,7 +35,7 @@ func New() *templates.Template {
 func (app *Application) setRedis() (err error) {
 	app.Logger.Debug("Redis connect")
 	app.Redis = &redis.Pool{
-		MaxIdle:         app.Config.RedisIdleConnections,
+		MaxIdle: app.Config.RedisIdleConnections,
 		Dial: func() (redis.Conn, error) {
 			return redis.Dial("tcp", app.Config.RedisConnect, redis.DialDatabase(app.Config.RedisDatabase))
 		},
