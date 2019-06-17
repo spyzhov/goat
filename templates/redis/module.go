@@ -9,7 +9,7 @@ func New() *templates.Template {
 		Package: "github.com/gomodule/redigo/redis",
 
 		Environments: []*templates.Environment{
-			{Name: "RedisConnect", Type: "string", Env: "REDIS_CONNECTION", Default: "redis://localhost:6379"},
+			{Name: "RedisUrl", Type: "string", Env: "REDIS_URL", Default: "redis://localhost:6379"},
 			{Name: "RedisDatabase", Type: "int", Env: "REDIS_DATABASE", Default: "0"},
 			{Name: "RedisIdleConnections", Type: "int", Env: "REDIS_IDLE_CONNECTIONS", Default: "0"},
 		},
@@ -37,7 +37,7 @@ func (app *Application) setRedis() (err error) {
 	app.Redis = &redis.Pool{
 		MaxIdle: app.Config.RedisIdleConnections,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.DialURL(app.Config.RedisConnect)
+			c, err := redis.DialURL(app.Config.RedisUrl)
 			if err != nil {
 				return nil, err
 			}
