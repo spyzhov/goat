@@ -43,12 +43,12 @@ import (
 )
 
 func main() {
-	if application, err := app.New(); err != nil {
+	application, err := app.New()
+	if err != nil {
 		panic(err)
-	} else {
-		defer application.Close()
-		application.Start()
 	}
+	defer application.Close()
+	application.Start()
 }
 `,
 				"app/config.go": `package app
