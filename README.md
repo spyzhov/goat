@@ -121,13 +121,14 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
     - [x] native;
     - [x] fasthttp;
     - [ ] echo;
-  - [ ] add Redis support `"github.com/gomodule/redigo/redis"`;
+  - [x] add Redis support `"github.com/gomodule/redigo/redis"`;
   - [ ] add clear TCP connect support;
-  - [ ] switch Postgres to `"github.com/lib/pq": "v1.0.0"`
+  - [x] switch Postgres to `"github.com/lib/pq": "v1.0.0"`
 - [ ] Dependencies:
   - [x] add `dep` support;
   - [ ] add `go mod` support;
   - [x] add versions for libs;
 - [ ] Service type:
   - [x] daemon;
+  - [x] lambda;
   - [ ] console;

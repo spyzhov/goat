@@ -43,12 +43,12 @@ import (
 )
 
 func main() {
-	if application, err := app.New(); err != nil {
+	application, err := app.New()
+	if err != nil {
 		panic(err)
-	} else {
-		defer application.Close()
-		application.Start()
 	}
+	defer application.Close()
+	application.Start()
 }
 `,
 				"app/config.go": `package app
@@ -183,9 +183,11 @@ func (app *Application) Stop() {
 	}
 }
 
-func (app *Application) closer(scope string, closer io.Closer) {
-	if err := closer.Close(); err != nil {
-		app.Logger.Warn("closer error", zap.String("scope", scope), zap.Error(err))
+func (app *Application) Closer(closer io.Closer, scope string) {
+	if closer != nil {
+		if err := closer.Close(); err != nil {
+			app.Logger.Warn("closer error", zap.String("scope", scope), zap.Error(err))
+		}
 	}
 }
 {{.SetterFunction}}
