@@ -49,6 +49,12 @@ import (
 
 func Postgres(db *pg.DB, logger *zap.Logger) {
 	migrations.SetTableName("_{{.Name}}_migrations")
+	_, _, err := migrations.Run(db, "init")
+	if err != nil {
+		logger.Debug("Postgres migrations: initialized")
+	} else {
+		logger.Info("Postgres migrations: initialize")
+	}
 
 	oldVersion, newVersion, err := migrations.Run(db, "up")
 

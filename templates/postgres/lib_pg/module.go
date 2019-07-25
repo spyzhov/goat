@@ -14,7 +14,7 @@ func New() *templates.Template {
 			{Name: "Postgres", Type: "*sql.DB"},
 		},
 		Libraries: []*templates.Library{
-			{Name: "github.com/lib/pq", Alias: "_", Version: "^1.0.0"},
+			{Name: "github.com/lib/pq", Alias: "_", Version: "v1.0.0"},
 			{Name: "database/sql"},
 		},
 		Models: map[string]string{},

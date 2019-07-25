@@ -49,7 +49,6 @@ type Library struct {
 	Alias   string
 	Repo    string
 	Version string
-	Branch  string
 }
 
 type (
@@ -324,25 +323,18 @@ func (libs Libraries) Interface() []interface{} {
 	return result
 }
 
-func (libs Libraries) Dep() string {
+func (libs Libraries) GoMod() string {
 	parts := make([]string, 0, len(libs))
 	for _, l := range libs {
-		if l.Version != "" || l.Branch != "" {
+		if l.Version != "" {
 			repo := l.Repo
-			bound, version := "version", l.Version
 			if repo == "" {
 				repo = l.Name
 			}
-			if version == "" {
-				bound, version = "branch", l.Branch
-			}
-			parts = append(parts, `[[constraint]]
-  name = "`+repo+`"
-  `+bound+` = "`+version+`"
-`)
+			parts = append(parts, repo+" "+l.Version)
 		}
 	}
-	return join(parts, "\n")
+	return join(parts, "\n\t")
 }
 
 //endregion

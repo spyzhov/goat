@@ -24,7 +24,10 @@ func New() *templates.Template {
 			sns_event.New(),
 			sqs_event.New(),
 		},
-		Conflicts: []string{"webserver"},
+		Conflicts: []string{
+			"webserver",
+			"rmq_consumer",
+		},
 
 		Environments: []*templates.Environment{},
 		Properties:   []*templates.Property{},

@@ -15,7 +15,7 @@ func New() *templates.Template {
 			{Name: "ClickHouse", Type: "*sql.DB"},
 		},
 		Libraries: []*templates.Library{
-			{Name: "github.com/kshvakov/clickhouse", Branch: "master"},
+			{Name: "github.com/kshvakov/clickhouse"},
 			{Name: "database/sql"},
 			{Name: "fmt"},
 		},

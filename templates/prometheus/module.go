@@ -12,7 +12,7 @@ func New() *templates.Template {
 		Environments: []*templates.Environment{},
 		Properties:   []*templates.Property{},
 		Libraries: []*templates.Library{
-			{Name: "github.com/prometheus/client_golang/prometheus/promhttp", Repo: "github.com/prometheus/client_golang", Version: "^0.9.2"},
+			{Name: "github.com/prometheus/client_golang/prometheus/promhttp", Repo: "github.com/prometheus/client_golang", Version: "v0.9.4"},
 		},
 		Models: map[string]string{},
 

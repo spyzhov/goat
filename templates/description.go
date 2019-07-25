@@ -19,7 +19,7 @@ func New() *Template {
 			{Name: "WaitGroup", Type: "*sync.WaitGroup", Default: "new(sync.WaitGroup)"},
 		},
 		Libraries: []*Library{
-			{Name: "go.uber.org/zap", Version: "^1.9.1"},
+			{Name: "go.uber.org/zap", Version: "v1.10.0"},
 			{Name: "{{.Repo}}/signals"},
 			{Name: "math"},
 			{Name: "io"},
@@ -54,7 +54,7 @@ func main() {
 				"app/config.go": `package app
 
 import (
-	"github.com/caarlos0/env"
+	"github.com/caarlos0/env/v6"
 )
 
 type Config struct {
@@ -77,19 +77,23 @@ type Logger struct {
 	logger *zap.Logger
 }
 
-func NewLogger(level string) (*zap.Logger, error) {
+func NewLogger(level string) (logger *zap.Logger, err error) {
 	cfg := zap.NewProductionConfig()
 	cfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
 
 	atom := zap.NewAtomicLevel()
-	err := atom.UnmarshalText([]byte(level))
+	err = atom.UnmarshalText([]byte(level))
 	if err != nil {
 		return nil, err
 	}
 
 	cfg.Level = atom
 
-	return cfg.Build()
+	logger, err = cfg.Build()
+
+	zap.ReplaceGlobals(logger)
+
+	return logger, err
 }
 
 func (l *Logger) Printf(format string, args ...interface{}) {
@@ -143,10 +147,8 @@ func (app *Application) Close() {
 
 func (app *Application) Start() {
 	defer app.Stop()
-
-{{.Runners}}
+{{.Runners -}}
 {{- if eq .ServiceType "lambda"}}
-
 	lambda.Start(app.Lambda)
 {{- else}}
 
@@ -216,15 +218,15 @@ WORKDIR /usr/share/zoneinfo
 RUN zip -r -0 /zoneinfo.zip .
 
 FROM golang:1.12 AS builder
+ENV GO111MODULE=on
 # build via packr hard way https://github.com/gobuffalo/packr#building-a-binary-the-hard-way
-RUN go get -u github.com/gobuffalo/packr/... && \
-	go get -u github.com/golang/dep/cmd/dep
+RUN go get -u github.com/gobuffalo/packr/v2/packr2
 WORKDIR /go/src/{{.Repo}}
-ADD . .
-RUN dep ensure && \
-	packr && \
+COPY . .
+RUN go mod download && \
+	packr2 && \
 	CGO_ENABLED=0 GOOS=linux go build -o /go/bin/{{.Name}} . && \
-	packr clean
+	packr2 clean
 
 FROM busybox:latest
 # configurations
@@ -251,38 +253,13 @@ type Config struct {
 }
 {{.MdCode}}
 `,
-				"Gopkg.toml": `# Gopkg.toml example
-#
-# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
-# for detailed Gopkg.toml documentation.
-#
-# required = ["github.com/user/thing/cmd/thing"]
-# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
-#
-# [[constraint]]
-#   name = "github.com/user/project"
-#   version = "1.0.0"
-#
-# [[constraint]]
-#   name = "github.com/user/project2"
-#   branch = "dev"
-#   source = "github.com/myfork/project2"
-#
-# [[override]]
-#   name = "github.com/x/y"
-#   version = "2.4.0"
-#
-# [prune]
-#   non-go = false
-#   go-tests = true
-#   unused-packages = true
+				"go.mod": `module {{.Repo}}
 
+go 1.12
 
-[prune]
-  go-tests = true
-  unused-packages = true
-
-{{.DepLibs}}
+require (
+	{{.GoMods}}
+)
 `,
 			}
 			return

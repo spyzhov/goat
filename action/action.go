@@ -5,8 +5,8 @@ import (
 	"github.com/spyzhov/goat/console"
 	"github.com/spyzhov/goat/templates"
 	"github.com/spyzhov/goat/templates/aws_lambda"
-	"github.com/spyzhov/goat/templates/clickhouse"
-	chMigrations "github.com/spyzhov/goat/templates/clickhouse/migrations"
+	// "github.com/spyzhov/goat/templates/clickhouse"
+	// chMigrations "github.com/spyzhov/goat/templates/clickhouse/migrations"
 	"github.com/spyzhov/goat/templates/mysql"
 	myMigrations "github.com/spyzhov/goat/templates/mysql/migrations"
 	"github.com/spyzhov/goat/templates/postgres"
@@ -47,7 +47,7 @@ type Context struct {
 	Props          string
 	PropsValue     string
 	Models         string
-	DepLibs        string
+	GoMods         string
 	MdCode         string
 	ServiceType    ServiceType
 }
@@ -188,7 +188,7 @@ func (a *Action) Invoke() (err error) {
 		Props:          a.getProperties(),
 		PropsValue:     a.getPropertiesValue(),
 		Models:         a.getModels(),
-		DepLibs:        a.getDepLibraries(),
+		GoMods:         a.getGoModLibraries(),
 		MdCode:         "```",
 		ServiceType:    a.getServiceType(),
 	}
@@ -220,7 +220,7 @@ func (a *Action) Invoke() (err error) {
 	if _, err = a.Console.Print(console.Wrap("Done!", console.OkGreen)); err != nil {
 		log.Fatal(err)
 	}
-	if _, err = a.Console.Print("Don't forget to run: %s", console.Wrap("dep ensure", console.Bold)); err != nil {
+	if _, err = a.Console.Print("Don't forget to run: %s", console.Wrap("go mod tidy", console.Bold)); err != nil {
 		log.Fatal(err)
 	}
 	return
@@ -257,8 +257,9 @@ func (a *Action) getConfig() *templates.Config {
 			mysql.New(),
 			myMigrations.New(),
 
-			clickhouse.New(),
-			chMigrations.New(),
+			// FIXME:
+			// clickhouse.New(),
+			// chMigrations.New(),
 
 			rmq_consumer.New(),
 			rmq_publisher.New(),
@@ -302,9 +303,9 @@ func (a *Action) getLibraries() string {
 	return libs.String()
 }
 
-func (a *Action) getDepLibraries() string {
-	a.log("dep-lib: start")
-	return a.Config.Libraries().Dep()
+func (a *Action) getGoModLibraries() string {
+	a.log("go-mod: start")
+	return a.Config.Libraries().GoMod()
 }
 
 func (a *Action) getServiceType() (serviceType ServiceType) {

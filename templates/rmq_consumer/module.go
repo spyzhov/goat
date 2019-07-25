@@ -4,9 +4,10 @@ import "github.com/spyzhov/goat/templates"
 
 func New() *templates.Template {
 	return &templates.Template{
-		ID:      "rmq_consumer",
-		Name:    "RMQ-consumer",
-		Package: "github.com/streadway/amqp",
+		ID:        "rmq_consumer",
+		Name:      "RMQ-consumer",
+		Package:   "github.com/streadway/amqp",
+		Conflicts: []string{"aws_lambda"},
 
 		Environments: []*templates.Environment{
 			{Name: "ConsumerAddress", Type: "string", Env: "CONSUMER_ADDR", Default: "amqp://guest:guest@localhost:5672"},

@@ -42,7 +42,7 @@ func (app *Application) migratePostgres() error {
 
 import (
 	"database/sql"
-	"github.com/gobuffalo/packr"
+	"github.com/gobuffalo/packr/v2"
 	_ "github.com/lib/pq"
 	"github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
@@ -51,7 +51,7 @@ import (
 func Postgres(db *sql.DB, logger *zap.Logger) error {
 	migrate.SetTable("_{{.Name}}_migrations")
 	migrations := &migrate.PackrMigrationSource{
-		Box: packr.NewBox("./postgres"),
+		Box: packr.New("postgres", "./postgres"),
 	}
 	logger.Debug("Postgres migrations: start")
 	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)

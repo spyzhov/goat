@@ -14,7 +14,7 @@ func New() *templates.Template {
 			{Name: "Postgres", Type: "*pg.DB"},
 		},
 		Libraries: []*templates.Library{
-			{Name: "github.com/go-pg/pg", Version: "^7.1.0"},
+			{Name: "github.com/go-pg/pg", Version: "v7.1.0"},
 		},
 		Models: map[string]string{},
 

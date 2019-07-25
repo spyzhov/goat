@@ -35,8 +35,6 @@ Use Postgres connection (github.com/go-pg)? [y/N]: y
 Use Postgres migrations (github.com/go-pg/migrations)? [y/N]: y
 Use MySQL connection (github.com/go-sql-driver/mysql)? [y/N]: y
 Use MySQL migrations (github.com/rubenv/sql-migrate)? [y/N]: y
-Use ClickHouse connection (github.com/kshvakov/clickhouse)? [y/N]: y
-Use ClickHouse migrations (github.com/golang-migrate/migrate)? [y/N]: y
 Select WebServer?
  2) Use FastHTTP server (github.com/valyala/fasthttp)?
  1) Use HTTP server (net/http)?
@@ -74,17 +72,10 @@ And you will got :
 ├── main.go
 ├── migrations
 │   ├── 01_init.go
-│   ├── clickhouse
-│   │   ├── 1-init.down.sql
-│   │   └── 1-init.up.sql
 │   ├── mysql
 │   │   └── 1-init.sql
-│   ├── clickhouse.go
 │   ├── mysql.go
-│   ├── postgres.go
-│   └── source
-│       └── packr
-│           └── packr.go
+│   └── postgres.go
 ├── README.md
 └── signals
     └── signals.go
@@ -123,10 +114,11 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
     - [ ] echo;
   - [x] add Redis support `"github.com/gomodule/redigo/redis"`;
   - [ ] add clear TCP connect support;
-  - [x] switch Postgres to `"github.com/lib/pq": "v1.0.0"`
+  - [x] switch Postgres to `"github.com/lib/pq": "v1.0.0"`;
+  - [ ] fix `clickhouse + migrations`;
 - [ ] Dependencies:
-  - [x] add `dep` support;
-  - [ ] add `go mod` support;
+  - [x] remove `dep` support;
+  - [x] add `go mod` support;
   - [x] add versions for libs;
 - [ ] Service type:
   - [x] daemon;

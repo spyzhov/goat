@@ -42,7 +42,7 @@ func (app *Application) migrateMySQL() error {
 
 import (
 	"database/sql"
-	"github.com/gobuffalo/packr"
+	"github.com/gobuffalo/packr/v2"
 	"github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
 )
@@ -50,7 +50,7 @@ import (
 func MySQL(db *sql.DB, logger *zap.Logger) error {
 	migrate.SetTable("_{{.Name}}_migrations")
 	migrations := &migrate.PackrMigrationSource{
-		Box: packr.NewBox("./mysql"),
+		Box: packr.New("mysql", "./mysql"),
 	}
 	logger.Debug("MySQL migrations: start")
 	n, err := migrate.Exec(db, "mysql", migrations, migrate.Up)
