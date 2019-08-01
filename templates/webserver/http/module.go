@@ -88,7 +88,6 @@ func (app *Application) RunHttp() error {
 			app.Logger.Error("http server close error", zap.Error(err))
 		}
 		app.Logger.Debug("http stops")
-		return
 	}()
 	return nil
 }
