@@ -75,7 +75,6 @@ func (app *Application) RunFastHttp() error {
 			app.Logger.Error("fasthttp server close error", zap.Error(err))
 		}
 		app.Logger.Debug("fasthttp stops")
-		return
 	}()
 	return nil
 }
