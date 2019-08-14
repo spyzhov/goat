@@ -1,19 +1,19 @@
-package http
+package httprouter
 
 import "github.com/spyzhov/goat/templates"
 
 func New() *templates.Template {
 	return &templates.Template{
-		ID:      "http",
-		Name:    "HTTP server",
-		Package: "net/http",
+		ID:      "httprouter",
+		Name:    "HTTPRouter server",
+		Package: "github.com/julienschmidt/httprouter",
 
 		Environments: []*templates.Environment{},
 		Properties: []*templates.Property{
-			{Name: "Http", Type: "*http.ServeMux", Default: "http.NewServeMux()"},
+			{Name: "Router", Type: "*httprouter.Router", Default: "httprouter.New()"},
 		},
 		Libraries: []*templates.Library{
-			{Name: "net/http"},
+			{Name: "github.com/julienschmidt/httprouter"},
 		},
 		Models: map[string]string{},
 
@@ -35,6 +35,7 @@ func New() *templates.Template {
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -43,13 +44,13 @@ import (
 
 // Declare all necessary HTTP methods
 func (app *Application) registerRoutes() {
-	app.Http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	app.Router.GET("/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		w.WriteHeader(http.StatusNotImplemented)
 		if _, err := fmt.Fprint(w, "Not implemented"); err != nil {
 			app.Logger.Warn("error on write response", zap.Error(err))
 		}
 	})
-	app.Http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+	app.Router.GET("/healthcheck", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		info, status := app.healthCheck()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
@@ -69,7 +70,7 @@ func (app *Application) RunHttp() error {
 		app.Logger.Info("http server started on [::]:" + strconv.Itoa(app.Config.Port))
 		server := &http.Server{
 			Addr:    ":" + strconv.Itoa(app.Config.Port),
-			Handler: app.Http,
+			Handler: app.Router,
 		}
 		server.RegisterOnShutdown(app.ctxCancel)
 

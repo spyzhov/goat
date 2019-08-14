@@ -114,17 +114,14 @@ func (app *Application) defaultHttpHandler(ctx *fasthttp.RequestCtx) {
 
 func (app *Application) healthCheck(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json")
-	info := map[string]string{
-		"service": "{{.Name}}",
-		"time":    time.Now().Format(time.RFC3339),
-	}
+	info, status := app.healthCheck()
 	err := json.NewEncoder(ctx).Encode(info)
 	if err != nil {
 		app.Logger.Warn("error on write response", zap.Error(err))
 		setStatusCode(ctx, http.StatusInternalServerError)
 		return
 	}
-	setStatusCode(ctx, http.StatusOK)
+	setStatusCode(ctx, status)
 }
 
 func setStatusCode(ctx *fasthttp.RequestCtx, status int) {` + templates.Str(prom, `
