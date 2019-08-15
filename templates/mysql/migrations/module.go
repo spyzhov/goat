@@ -45,6 +45,7 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
+	"strings"
 )
 
 func MySQL(db *sql.DB, logger *zap.Logger) error {
@@ -55,6 +56,10 @@ func MySQL(db *sql.DB, logger *zap.Logger) error {
 	logger.Debug("MySQL migrations: start")
 	n, err := migrate.Exec(db, "mysql", migrations, migrate.Up)
 	if err != nil {
+		if strings.HasSuffix(err.Error(), "unknown migration in database") {
+			logger.Warn("MySQL migrations: SKIPPED", zap.Error(err))
+			return nil
+		}
 		return err
 	}
 

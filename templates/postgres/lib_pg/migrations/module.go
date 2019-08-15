@@ -46,6 +46,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
+	"strings"
 )
 
 func Postgres(db *sql.DB, logger *zap.Logger) error {
@@ -56,6 +57,10 @@ func Postgres(db *sql.DB, logger *zap.Logger) error {
 	logger.Debug("Postgres migrations: start")
 	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
 	if err != nil {
+		if strings.HasSuffix(err.Error(), "unknown migration in database") {
+			logger.Warn("Postgres migrations: SKIPPED", zap.Error(err))
+			return nil
+		}
 		return err
 	}
 
