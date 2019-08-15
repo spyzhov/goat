@@ -54,6 +54,43 @@ func (app *Application) healthCheck() (info map[string]string, status int) {
 			}
 			return "OK"
 		})(),`, "") + `
+` + templates.Str(config.IsEnabled("mysql"), `
+
+		"postgres": (func() string {
+			var count int
+			if _, err := app.Postgres.WithTimeout(time.Second).QueryOne(pg.Scan(&count), "SELECT 1"); err != nil {
+				status = http.StatusInternalServerError
+				return err.Error()
+			}
+			return "OK"
+		})(),`, "") + `
+` + templates.Str(config.IsEnabled("mysql"), `
+
+		"mysql": (func() string {
+			if err := app.MySQL.Ping(); err != nil {
+				status = http.StatusInternalServerError
+				return err.Error()
+			}
+			return "OK"
+		})(),`, "") + `
+` + templates.Str(config.IsEnabled("rmq_consumer"), `
+
+		"consumer": (func() string {
+			if app.Consumer.Connection.IsClosed() {
+				status = http.StatusInternalServerError
+				return "Closed"
+			}
+			return "OK"
+		})(),`, "") + `
+` + templates.Str(config.IsEnabled("rmq_publisher"), `
+
+		"publisher": (func() string {
+			if app.Publisher.Connection.IsClosed() {
+				status = http.StatusInternalServerError
+				return "Closed"
+			}
+			return "OK"
+		})(),`, "") + `
 	}
 
 	return info, status

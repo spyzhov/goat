@@ -40,7 +40,7 @@ func (app *Application) setPrometheus() error {
 // Set metrics
 func (app *Application) setPrometheus() error {
 	app.Logger.Debug("Prometheus registered")
-	app.Router.HandlerFunc("GET", "/metrics", promhttp.Handler())
+	app.Router.Handler("GET", "/metrics", promhttp.Handler())
 	return nil
 }`
 			}

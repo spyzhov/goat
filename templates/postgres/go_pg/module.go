@@ -5,7 +5,7 @@ import "github.com/spyzhov/goat/templates"
 func New() *templates.Template {
 	return &templates.Template{
 		ID:           "go-postgres",
-		Name:         "Postgres connection",
+		Name:         "Postgres connection ORM",
 		Package:      "github.com/go-pg",
 		Dependencies: []string{"postgres"},
 
