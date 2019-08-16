@@ -120,7 +120,7 @@ MIT licensed. See the [LICENSE](LICENSE) file for details.
   - [x] remove `dep` support;
   - [x] add `go mod` support;
   - [x] add versions for libs;
-- [ ] Service type:
+- [x] Service type:
   - [x] daemon;
   - [x] lambda;
-  - [ ] console;
+  - [x] console;

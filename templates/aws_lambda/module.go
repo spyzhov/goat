@@ -27,6 +27,7 @@ func New() *templates.Template {
 		Conflicts: []string{
 			"webserver",
 			"rmq_consumer",
+			"console",
 		},
 
 		Environments: []*templates.Environment{},

@@ -7,6 +7,7 @@ import (
 	"github.com/spyzhov/goat/templates/aws_lambda"
 	// "github.com/spyzhov/goat/templates/clickhouse"
 	// chMigrations "github.com/spyzhov/goat/templates/clickhouse/migrations"
+	consoleTpl "github.com/spyzhov/goat/templates/console"
 	"github.com/spyzhov/goat/templates/mysql"
 	myMigrations "github.com/spyzhov/goat/templates/mysql/migrations"
 	"github.com/spyzhov/goat/templates/postgres"
@@ -50,13 +51,16 @@ type Context struct {
 	GoMods         string
 	MdCode         string
 	ServiceType    ServiceType
+	Flags          string
+	FlagsEnv       string
 }
 
 type ServiceType string
 
 const (
-	DaemonServiceType ServiceType = "daemon"
-	LambdaServiceType ServiceType = "lambda"
+	DaemonServiceType  ServiceType = "daemon"
+	LambdaServiceType  ServiceType = "lambda"
+	ConsoleServiceType ServiceType = "console"
 )
 
 var (
@@ -191,6 +195,8 @@ func (a *Action) Invoke() (err error) {
 		GoMods:         a.getGoModLibraries(),
 		MdCode:         "```",
 		ServiceType:    a.getServiceType(),
+		Flags:          a.getFlags(),
+		FlagsEnv:       a.getFlagsEnv(),
 	}
 	files := make(map[string]*template.Template)
 	for name, content := range a.getTemplateFiles() {
@@ -248,6 +254,8 @@ func (a *Action) getConfig() *templates.Config {
 			webserver.New(),
 			prometheus.New(),
 
+			consoleTpl.New(),
+
 			redis.New(),
 
 			postgres.New(),
@@ -273,6 +281,16 @@ func (a *Action) getConfig() *templates.Config {
 func (a *Action) getEnvironments() string {
 	a.log("env: start")
 	return a.Config.Environments().String()
+}
+
+func (a *Action) getFlags() string {
+	a.log("flags: start")
+	return a.Config.Environments().Flags()
+}
+
+func (a *Action) getFlagsEnv() string {
+	a.log("flags: start")
+	return a.Config.Environments().FlagsEnv()
 }
 
 func (a *Action) getProperties() string {
@@ -314,6 +332,8 @@ func (a *Action) getServiceType() (serviceType ServiceType) {
 	for _, pkg := range a.Config.Install {
 		if pkg.ID == "aws_lambda" {
 			serviceType = LambdaServiceType
+		} else if pkg.ID == "console" {
+			serviceType = ConsoleServiceType
 		}
 	}
 	return

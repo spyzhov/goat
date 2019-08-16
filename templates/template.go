@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spyzhov/goat/console"
 	"sort"
+	"strings"
 )
 
 type Config struct {
@@ -32,10 +33,12 @@ type Template struct {
 }
 
 type Environment struct {
-	Name    string
-	Type    string
-	Env     string
-	Default string
+	Name        string
+	Type        string
+	Env         string
+	Default     string
+	Flag        string
+	Description string
 }
 
 type Property struct {
@@ -63,11 +66,11 @@ type (
 	TemplateFiles           map[string]string
 )
 
-func BlankFunction(*Config) string {
+func BlankFunction(_ *Config) string {
 	return ""
 }
 
-func BlankFunctionMap(*Config) map[string]string {
+func BlankFunctionMap(_ *Config) map[string]string {
 	return map[string]string{}
 }
 
@@ -264,6 +267,51 @@ func (env Environments) String() string {
 		}
 	}
 	return join(parts, "\n")
+}
+
+func (env Environments) Flags() string {
+	parts := make([]string, 0, len(env))
+	tpl := `	var %s = flag.%s("%s", cfg.%s, "%s")`
+	for _, e := range env {
+		parts = append(parts, fmt.Sprintf(tpl, e.FlagVar(), e.FlagType(), e.FlagName(), e.Name, e.FlagDescription()))
+	}
+	return join(parts, "\n")
+}
+
+func (env Environments) FlagsEnv() string {
+	parts := make([]string, 0, len(env))
+	tpl := `	cfg.%s = *%s`
+	for _, e := range env {
+		parts = append(parts, fmt.Sprintf(tpl, e.Name, e.FlagVar()))
+	}
+	return join(parts, "\n")
+}
+
+//endregion
+//region Environment
+
+func (e Environment) FlagName() string {
+	result := e.Flag
+	if result == "" {
+		result = strings.ToLower(e.Env)
+		result = strings.ReplaceAll(result, "_", "-")
+	}
+	return result
+}
+
+func (e Environment) FlagType() string {
+	return strings.ToUpper(e.Type[0:1]) + e.Type[1:]
+}
+
+func (e Environment) FlagVar() string {
+	return strings.ToLower(e.Name[0:1]) + e.Name[1:]
+}
+
+func (e Environment) FlagDescription() string {
+	if e.Description == "" {
+		return "flag for ENV:" + e.Env
+	}
+	return e.Description
 }
 
 //endregion

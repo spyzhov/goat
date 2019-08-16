@@ -53,7 +53,8 @@ func main() {
 `,
 				"app/config.go": `package app
 
-import (
+import (` + Str(config.IsEnabled("console"), `
+	"flag"`, "") + `
 	"github.com/caarlos0/env/v6"
 )
 
@@ -62,10 +63,21 @@ type Config struct {
 }
 
 func NewConfig() (cfg *Config, err error) {
-	cfg = new(Config)
-	return cfg, env.Parse(cfg)
+	cfg = new(Config)` + Str(config.IsEnabled("console"), `
+	if err = env.Parse(cfg); err != nil {
+		return nil, err
+	}
+	return FlagsConfig(cfg)`, `
+	return cfg, env.Parse(cfg)`) + `
 }
-`,
+` + Str(config.IsEnabled("console"), `
+func FlagsConfig(cfg *Config) (*Config, error) {
+{{.Flags}}
+	flag.Parse()
+{{.FlagsEnv}}
+	return cfg, nil
+}
+`, ""),
 				"app/logger.go": `package app
 
 import (
