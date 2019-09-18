@@ -94,7 +94,9 @@ func (app *Application) fastHttpHandler(ctx *fasthttp.RequestCtx) {
 	case "/favicon.ico":
 		setStatusCode(ctx, http.StatusNoContent)
 	case "/healthcheck":
-		app.healthCheck(ctx)` + templates.Str(prom, `
+		app.healthCheck(ctx)
+	case "/info":
+		app.serviceInfo(ctx)` + templates.Str(prom, `
 	case "/metrics":
 		handler := fasthttpadaptor.NewFastHTTPHandler(promhttp.Handler())
 		handler(ctx)
@@ -122,6 +124,17 @@ func (app *Application) healthCheck(ctx *fasthttp.RequestCtx) {
 		return
 	}
 	setStatusCode(ctx, status)
+}
+
+func (app *Application) serviceInfo(ctx *fasthttp.RequestCtx) {
+	ctx.SetContentType("application/json")
+	err := json.NewEncoder(ctx).Encode(app.Info)
+	if err != nil {
+		app.Logger.Warn("error on write response", zap.Error(err))
+		setStatusCode(ctx, http.StatusInternalServerError)
+		return
+	}
+	setStatusCode(ctx, http.StatusOK)
 }
 
 func setStatusCode(ctx *fasthttp.RequestCtx, status int) {` + templates.Str(prom, `

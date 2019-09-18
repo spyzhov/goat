@@ -58,6 +58,13 @@ func (app *Application) registerRoutes() {
 			app.Logger.Warn("error on write response", zap.Error(err))
 		}
 	})
+	app.Router.GET("/info", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(app.Info); err != nil {
+			app.Logger.Warn("error on write response", zap.Error(err))
+		}
+	})
 }
 
 // Start HTTP server

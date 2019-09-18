@@ -17,6 +17,12 @@ func New() *Template {
 			{Name: "Ctx", Type: "context.Context"},
 			{Name: "ctxCancel", Type: "context.CancelFunc"},
 			{Name: "WaitGroup", Type: "*sync.WaitGroup", Default: "new(sync.WaitGroup)"},
+			{Name: "Info", Type: "*BuildInfo", Default: `&BuildInfo{
+			Version: Version,
+			Created: Created,
+			Branch:  Branch,
+			Commit:  Commit,
+		}`},
 		},
 		Libraries: []*Library{
 			{Name: "go.uber.org/zap", Version: "v1.10.0"},
@@ -35,6 +41,7 @@ func New() *Template {
 		TemplateClosers:        BlankFunction,
 
 		Templates: func(config *Config) (strings map[string]string) {
+			q := "`"
 			strings = map[string]string{
 				"main.go": `package main
 
@@ -122,8 +129,22 @@ import (
 {{.Repos}}
 )
 
+var (
+	Version string
+	Branch  string
+	Commit  string
+	Created string
+)
+
 type Application struct {
 {{.Props}}
+}
+
+type BuildInfo struct {
+	Version string ` + q + `json:"version"` + q + `
+	Created string ` + q + `json:"created"` + q + `
+	Branch  string ` + q + `json:"branch"` + q + `
+	Commit  string ` + q + `json:"commit"` + q + `
 }
 {{.Models}}
 
@@ -231,13 +252,30 @@ RUN zip -r -0 /zoneinfo.zip .
 
 FROM golang:1.12 AS builder
 ENV GO111MODULE=on
+
+ARG APP_VERSION=Unknown
+ARG APP_BRANCH=Unknown
+ARG APP_COMMIT=Unknown
+ARG APP_CREATED=Unknown
+
 # build via packr hard way https://github.com/gobuffalo/packr#building-a-binary-the-hard-way
 RUN go get -u github.com/gobuffalo/packr/v2/packr2
 WORKDIR /go/src/{{.Repo}}
 COPY . .
+
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+
 RUN go mod download && \
 	packr2 && \
-	CGO_ENABLED=0 GOOS=linux go build -o /go/bin/{{.Name}} . && \
+	go build \
+	    -ldflags "\
+	        -X {{.Repo}}/app.Version=${APP_VERSION} \
+	        -X {{.Repo}}/app.Branch=${APP_BRANCH} \
+	        -X {{.Repo}}/app.Commit=${APP_COMMIT} \
+	        -X {{.Repo}}/app.Created=${APP_CREATED} \
+	    " \
+	    -o /go/bin/{{.Name}} . && \
 	packr2 clean
 
 FROM busybox:latest
@@ -263,6 +301,37 @@ package app
 type Config struct {
 {{.Env}}
 }
+{{.MdCode}}
+
+# Build
+
+## Golang
+
+{{.MdCode}}bash
+APP_VERSION=` + q + `git tag --contains $(git rev-parse HEAD)` + q + `
+APP_BRANCH=` + q + `git rev-parse --abbrev-ref HEAD` + q + `
+APP_COMMIT=` + q + `git rev-parse --short HEAD` + q + `
+APP_CREATED=` + q + `date '+%y/%m/%d %H:%M:%S %Z'` + q + `
+
+go build \
+    -ldflags "\
+        -X {{.Repo}}/app.Version=${APP_VERSION} \
+        -X {{.Repo}}/app.Branch=${APP_BRANCH} \
+        -X {{.Repo}}/app.Commit=${APP_COMMIT} \
+        -X {{.Repo}}/app.Created=${APP_CREATED} \
+    " .
+{{.MdCode}}
+
+## Docker
+
+{{.MdCode}}bash
+    docker build \
+        --build-arg \
+            APP_VERSION=` + q + `git tag --contains $(git rev-parse HEAD)` + q + ` \
+            APP_BRANCH=` + q + `git rev-parse --abbrev-ref HEAD` + q + ` \
+            APP_COMMIT=` + q + `git rev-parse --short HEAD` + q + ` \
+            APP_CREATED=` + q + `date '+%y/%m/%d %H:%M:%S %Z'` + q + ` \
+        -t {{.Name}} .
 {{.MdCode}}
 `,
 				"go.mod": `module {{.Repo}}
