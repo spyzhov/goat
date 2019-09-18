@@ -39,7 +39,6 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 // Declare all necessary HTTP methods
