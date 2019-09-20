@@ -278,6 +278,15 @@ func (env Environments) Flags() string {
 	return join(parts, "\n")
 }
 
+func (env Environments) CobraFlags() string {
+	parts := make([]string, 0, len(env))
+	tpl := `	cmd.PersistentFlags().%sVarP(&cfg.%s, "%s", "", cfg.%s, "%s")`
+	for _, e := range env {
+		parts = append(parts, fmt.Sprintf(tpl, e.FlagType(), e.Name, e.FlagName(), e.Name, e.FlagDescription()))
+	}
+	return join(parts, "\n")
+}
+
 func (env Environments) FlagsEnv() string {
 	parts := make([]string, 0, len(env))
 	tpl := `	cfg.%s = *%s`

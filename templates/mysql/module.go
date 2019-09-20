@@ -23,7 +23,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.setDataBaseMySQL(); err != nil {
-		logger.Panic("cannot connect to MySQL", zap.Error(err))
+		app.Logger.Error("cannot connect to MySQL", zap.Error(err))
 		return nil, err
 	}`
 			return

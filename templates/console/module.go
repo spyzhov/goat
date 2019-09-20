@@ -1,11 +1,19 @@
 package console
 
-import "github.com/spyzhov/goat/templates"
+import (
+	"github.com/spyzhov/goat/templates"
+	"github.com/spyzhov/goat/templates/console/blank"
+	"github.com/spyzhov/goat/templates/console/cobra"
+)
 
 func New() *templates.Template {
 	return &templates.Template{
-		ID:        "console",
-		Name:      "Console",
+		ID:   "console",
+		Name: "Console",
+		Select: []*templates.Template{
+			blank.New(),
+			cobra.New(),
+		},
 		Conflicts: []string{"aws_lambda", "webserver"},
 
 		Environments: []*templates.Environment{},
@@ -26,10 +34,9 @@ func New() *templates.Template {
 
 		Templates: func(config *templates.Config) (strings map[string]string) {
 			strings = map[string]string{
-				"app/action.go": `package app
+				"app/console.go": `package app
 
 import (
-	"errors"
 	"go.uber.org/zap"
 	"time"
 )
@@ -51,12 +58,6 @@ func (app *Application) RunAction() error {
 		}
 	}()
 	return nil
-}
-
-// TODO: Implement action
-func (app *Application) action() (err error) {
-	app.Logger.Info("Action: run")
-	return errors.New("not implemented")
 }
 `,
 			}

@@ -24,7 +24,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.setClickHouse(); err != nil {
-		logger.Panic("cannot connect to ClickHouse", zap.Error(err))
+		app.Logger.Error("cannot connect to ClickHouse", zap.Error(err))
 		return nil, err
 	}`
 			return

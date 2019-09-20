@@ -21,7 +21,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.setDataBasePostgres(); err != nil {
-		logger.Panic("cannot connect to Postgres", zap.Error(err))
+		app.Logger.Error("cannot connect to Postgres", zap.Error(err))
 		return nil, err
 	}`
 			return

@@ -285,11 +285,14 @@ func (a *Action) getEnvironments() string {
 
 func (a *Action) getFlags() string {
 	a.log("flags: start")
+	if a.Config.IsEnabled("cobra") {
+		return a.Config.Environments().CobraFlags()
+	}
 	return a.Config.Environments().Flags()
 }
 
 func (a *Action) getFlagsEnv() string {
-	a.log("flags: start")
+	a.log("flags-env: start")
 	return a.Config.Environments().FlagsEnv()
 }
 

@@ -11,8 +11,8 @@ func New() *Template {
 			{Name: "Debug", Type: "bool", Env: "DEBUG"},
 		},
 		Properties: []*Property{
-			{Name: "Logger", Type: "*zap.Logger", Default: "logger"},
-			{Name: "Config", Type: "*Config", Default: "config"},
+			{Name: "Logger", Type: "*zap.Logger"},
+			{Name: "Config", Type: "*Config"},
 			{Name: "Error", Type: "chan error", Default: "make(chan error, math.MaxUint8)"},
 			{Name: "Ctx", Type: "context.Context"},
 			{Name: "ctxCancel", Type: "context.CancelFunc"},
@@ -60,31 +60,47 @@ func main() {
 `,
 				"app/config.go": `package app
 
-import (` + Str(config.IsEnabled("console"), `
-	"flag"`, "") + `
+import (` + Str(config.IsEnabled("console_blank"), `
+	"flag"`, Str(config.IsEnabled("cobra"), `
+	"github.com/spf13/cobra"`, "")) + `
 	"github.com/caarlos0/env/v6"
 )
 
 type Config struct {
 {{.Env}}
 }
-
+` + Str(config.IsEnabled("console_blank"), `
 func NewConfig() (cfg *Config, err error) {
-	cfg = new(Config)` + Str(config.IsEnabled("console"), `
+	cfg = new(Config)
 	if err = env.Parse(cfg); err != nil {
 		return nil, err
 	}
-	return FlagsConfig(cfg)`, `
-	return cfg, env.Parse(cfg)`) + `
+	return FlagsConfig(cfg)
 }
-` + Str(config.IsEnabled("console"), `
+
 func FlagsConfig(cfg *Config) (*Config, error) {
 {{.Flags}}
 	flag.Parse()
 {{.FlagsEnv}}
 	return cfg, nil
+}`, Str(config.IsEnabled("cobra"), `
+func NewConfig(cmd *cobra.Command) (cfg *Config, err error) {
+	cfg = new(Config)
+	if err = env.Parse(cfg); err != nil {
+		return nil, err
+	}
+	return FlagsConfig(cmd, cfg)
 }
-`, ""),
+
+func FlagsConfig(cmd *cobra.Command, cfg *Config) (*Config, error) {
+{{.Flags}}
+	return cfg, nil
+}`, `
+func NewConfig() (cfg *Config, err error) {
+	cfg = new(Config)
+	return cfg, env.Parse(cfg)
+}`)) + `
+`,
 				"app/logger.go": `package app
 
 import (
@@ -109,7 +125,9 @@ func NewLogger(level string) (logger *zap.Logger, err error) {
 	cfg.Level = atom
 
 	logger, err = cfg.Build()
-
+	if err != nil {
+		return nil, err
+	}
 	zap.ReplaceGlobals(logger)
 
 	return logger, err
@@ -130,10 +148,10 @@ import (
 )
 
 var (
-	Version string
-	Branch  string
-	Commit  string
-	Created string
+	Version = "unknown"
+	Branch  = "unknown"
+	Commit  = "unknown"
+	Created = "unknown"
 )
 
 type Application struct {
@@ -148,28 +166,31 @@ type BuildInfo struct {
 }
 {{.Models}}
 
-func New() (*Application, error) {
-	config, err := NewConfig()
-	if err != nil {
-		return nil, err
-	}
-	logger, err := NewLogger(config.Level)
-	if err != nil {
-		return nil, err
-	}
-	logger.Debug("debug mode on")
-
-	app := &Application{
+func New() (app *Application, err error) {
+	app = &Application{
 {{.PropsValue}}
 	}
+
 	app.Ctx, app.ctxCancel = context.WithCancel(context.Background())
 	defer func() {
 		if err != nil {
 			app.Close()
 		}
 	}()
+` + Str(config.IsEnabled("cobra"), `
+	if err = app.InitCommands(); err != nil {
+		return
+	}`, ``) + `
+	app.Config, err = NewConfig(` + Str(config.IsEnabled("cobra"), `app.Command`, ``) + `)
+	if err != nil {
+		return nil, err
+	}
+	app.Logger, err := NewLogger(app.Config.Level)
+	if err != nil {
+		return nil, err
+	}
+	app.Logger.Debug("debug mode on")
 {{.Setter}}
-
 	return app, nil
 }
 

@@ -20,7 +20,7 @@ func New() *templates.Template {
 			if config.IsEnabled("http") || config.IsEnabled("httprouter") {
 				s = `
 	if err = app.setPrometheus(); err != nil {
-		logger.Panic("cannot register Prometheus", zap.Error(err))
+		app.Logger.Error("cannot register Prometheus", zap.Error(err))
 		return nil, err
 	}`
 			}

@@ -34,7 +34,7 @@ type RabbitMq struct {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.setConsumer(&app.Consumer, app.Config.ConsumerAddress, app.Config.ConsumerExchange, app.Config.ConsumerQueue, app.Config.ConsumerRoutingKey); err != nil {
-		logger.Panic("cannot connect to consumer RabbitMQ", zap.Error(err))
+		app.Logger.Error("cannot connect to consumer RabbitMQ", zap.Error(err))
 		return nil, err
 	}`
 			return

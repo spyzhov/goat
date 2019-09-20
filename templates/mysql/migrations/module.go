@@ -19,7 +19,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.migrateMySQL(); err != nil {
-		logger.Panic("cannot migrate on MySQL", zap.Error(err))
+		app.Logger.Error("cannot migrate on MySQL", zap.Error(err))
 		return nil, err
 	}`
 			return

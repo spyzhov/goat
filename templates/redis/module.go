@@ -24,7 +24,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.setRedis(); err != nil {
-		logger.Panic("cannot connect to Redis", zap.Error(err))
+		app.Logger.Error("cannot connect to Redis", zap.Error(err))
 		return nil, err
 	}`
 			return
