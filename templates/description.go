@@ -185,7 +185,7 @@ func New() (app *Application, err error) {
 	if err != nil {
 		return nil, err
 	}
-	app.Logger, err := NewLogger(app.Config.Level)
+	app.Logger, err = NewLogger(app.Config.Level)
 	if err != nil {
 		return nil, err
 	}
