@@ -210,7 +210,7 @@ func (app *Application) Start() {
 	case err := <-app.Error:
 		app.Logger.Panic("service crashed", zap.Error(err))
 	case <-app.Ctx.Done():
-		app.Logger.Error("service stops via context")
+		app.Logger.Info("service stops via context")
 	case sig := <-signals.WaitExit():
 		app.Logger.Info("service stop", zap.Stringer("signal", sig))
 	} {{- end}}
