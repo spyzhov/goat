@@ -94,7 +94,9 @@ func NewConfig(cmd *cobra.Command) (cfg *Config, err error) {
 
 func FlagsConfig(cmd *cobra.Command, cfg *Config) (*Config, error) {
 {{.Flags}}
-	return cfg, nil
+
+	err := cmd.PersistentFlags().Parse(os.Args[1:])
+	return cfg, err
 }`, `
 func NewConfig() (cfg *Config, err error) {
 	cfg = new(Config)
