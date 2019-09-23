@@ -62,7 +62,8 @@ func main() {
 
 import (` + Str(config.IsEnabled("console_blank"), `
 	"flag"`, Str(config.IsEnabled("cobra"), `
-	"github.com/spf13/cobra"`, "")) + `
+	"github.com/spf13/cobra"
+	"os"`, "")) + `
 	"github.com/caarlos0/env/v6"
 )
 
