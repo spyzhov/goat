@@ -63,6 +63,7 @@ func main() {
 import (` + Str(config.IsEnabled("console_blank"), `
 	"flag"`, Str(config.IsEnabled("cobra"), `
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"os"`, "")) + `
 	"github.com/caarlos0/env/v6"
 )
@@ -94,10 +95,16 @@ func NewConfig(cmd *cobra.Command) (cfg *Config, err error) {
 }
 
 func FlagsConfig(cmd *cobra.Command, cfg *Config) (*Config, error) {
+// region System flags
+	cmd.PersistentFlags().StringVarP(&cfg.Level, "log-level", "l", cfg.Level, "Log level for current run")
+	cmd.PersistentFlags().Init(os.Args[0], pflag.ContinueOnError)
+	_ = cmd.PersistentFlags().Parse(os.Args[1:])
+	cmd.PersistentFlags().Init(os.Args[0], pflag.PanicOnError)
+// endregion
+
 {{.Flags}}
 
-	err := cmd.PersistentFlags().Parse(os.Args[1:])
-	return cfg, err
+	return cfg, nil
 }`, `
 func NewConfig() (cfg *Config, err error) {
 	cfg = new(Config)
