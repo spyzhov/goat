@@ -198,7 +198,9 @@ func New() (app *Application, err error) {
 }
 
 func (app *Application) Close() {
-	app.Logger.Debug("Application stops")
+	if app.Logger != nil {
+		app.Logger.Debug("Application stops")
+	}
 {{.Closers}}
 }
 
