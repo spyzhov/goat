@@ -344,10 +344,11 @@ type Config struct {
 APP_VERSION=` + q + `git tag --contains $(git rev-parse HEAD)` + q + `
 APP_BRANCH=` + q + `git rev-parse --abbrev-ref HEAD` + q + `
 APP_COMMIT=` + q + `git rev-parse --short HEAD` + q + `
-APP_CREATED=` + q + `date '+%y/%m/%d %H:%M:%S %Z'` + q + `
+APP_CREATED=` + q + `date '+%Y-%m-%dT%H:%M:%SZ%Z'` + q + `
 
 go build \
     -ldflags "\
+        -w \
         -X {{.Repo}}/app.Version=${APP_VERSION} \
         -X {{.Repo}}/app.Branch=${APP_BRANCH} \
         -X {{.Repo}}/app.Commit=${APP_COMMIT} \
@@ -363,7 +364,7 @@ go build \
             APP_VERSION=` + q + `git tag --contains $(git rev-parse HEAD)` + q + ` \
             APP_BRANCH=` + q + `git rev-parse --abbrev-ref HEAD` + q + ` \
             APP_COMMIT=` + q + `git rev-parse --short HEAD` + q + ` \
-            APP_CREATED=` + q + `date '+%y/%m/%d %H:%M:%S %Z'` + q + ` \
+            APP_CREATED=` + q + `date '+%Y-%m-%dT%H:%M:%SZ%Z'` + q + ` \
         -t {{.Name}} .
 {{.MdCode}}
 `,
