@@ -20,7 +20,6 @@ func New() *Template {
 			{Name: "Info", Type: "*BuildInfo", Default: `&BuildInfo{
 			Version: Version,
 			Created: Created,
-			Branch:  Branch,
 			Commit:  Commit,
 		}`},
 		},
@@ -159,7 +158,6 @@ import (
 
 var (
 	Version = "unknown"
-	Branch  = "unknown"
 	Commit  = "unknown"
 	Created = "unknown"
 )
@@ -171,7 +169,6 @@ type Application struct {
 type BuildInfo struct {
 	Version string ` + q + `json:"version"` + q + `
 	Created string ` + q + `json:"created"` + q + `
-	Branch  string ` + q + `json:"branch"` + q + `
 	Commit  string ` + q + `json:"commit"` + q + `
 }
 {{.Models}}
@@ -287,7 +284,6 @@ FROM golang:1.13 AS builder
 ENV GO111MODULE=on
 
 ARG APP_VERSION=Unknown
-ARG APP_BRANCH=Unknown
 ARG APP_COMMIT=Unknown
 ARG APP_CREATED=Unknown
 
@@ -304,7 +300,6 @@ RUN go mod download && \
 	go build \
 	    -ldflags "\
 	        -X {{.Repo}}/app.Version=${APP_VERSION} \
-	        -X {{.Repo}}/app.Branch=${APP_BRANCH} \
 	        -X {{.Repo}}/app.Commit=${APP_COMMIT} \
 	        -X {{.Repo}}/app.Created=${APP_CREATED} \
 	    " \
@@ -342,7 +337,6 @@ type Config struct {
 
 {{.MdCode}}bash
 APP_VERSION=` + q + `git tag --contains $(git rev-parse HEAD)` + q + `
-APP_BRANCH=` + q + `git rev-parse --abbrev-ref HEAD` + q + `
 APP_COMMIT=` + q + `git rev-parse --short HEAD` + q + `
 APP_CREATED=` + q + `date '+%Y-%m-%dT%H:%M:%SZ%Z'` + q + `
 
@@ -350,7 +344,6 @@ go build \
     -ldflags "\
         -w \
         -X {{.Repo}}/app.Version=${APP_VERSION} \
-        -X {{.Repo}}/app.Branch=${APP_BRANCH} \
         -X {{.Repo}}/app.Commit=${APP_COMMIT} \
         -X {{.Repo}}/app.Created=${APP_CREATED} \
     " .
@@ -362,7 +355,6 @@ go build \
     docker build \
         --build-arg \
             APP_VERSION=` + q + `git tag --contains $(git rev-parse HEAD)` + q + ` \
-            APP_BRANCH=` + q + `git rev-parse --abbrev-ref HEAD` + q + ` \
             APP_COMMIT=` + q + `git rev-parse --short HEAD` + q + ` \
             APP_CREATED=` + q + `date '+%Y-%m-%dT%H:%M:%SZ%Z'` + q + ` \
         -t {{.Name}} .
