@@ -25,7 +25,6 @@ func New() *Template {
 		},
 		Libraries: []*Library{
 			{Name: "go.uber.org/zap", Version: "v1.10.0"},
-			{Name: "{{.Repo}}/signals"},
 			{Name: "math"},
 			{Name: "io"},
 			{Name: "context"},
@@ -220,7 +219,7 @@ func (app *Application) Start() {
 		app.Logger.Panic("service crashed", zap.Error(err))
 	case <-app.Ctx.Done():
 		app.Logger.Info("service stops via context")
-	case sig := <-signals.WaitExit():
+	case sig := <-WaitExit():
 		app.Logger.Info("service stop", zap.Stringer("signal", sig))
 	} {{- end}}
 }
@@ -257,7 +256,7 @@ func (app *Application) Closer(closer io.Closer, scope string) {
 }
 {{.SetterFunction}}
 `,
-				"signals/signals.go": `package signals
+				"app/signals.go": `package app
 
 import (
 	"os"
