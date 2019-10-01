@@ -352,10 +352,9 @@ go build \
 
 {{.MdCode}}bash
     docker build \
-        --build-arg \
-            APP_VERSION=` + q + `git tag --contains $(git rev-parse HEAD)` + q + ` \
-            APP_COMMIT=` + q + `git rev-parse --short HEAD` + q + ` \
-            APP_CREATED=` + q + `date '+%Y-%m-%dT%H:%M:%SZ%Z'` + q + ` \
+        --build-arg APP_VERSION=` + q + `git tag --contains $(git rev-parse HEAD)` + q + ` \
+        --build-arg APP_COMMIT=` + q + `git rev-parse --short HEAD` + q + ` \
+        --build-arg APP_CREATED=` + q + `date '+%Y-%m-%dT%H:%M:%SZ%Z'` + q + ` \
         -t {{.Name}} .
 {{.MdCode}}
 `,
