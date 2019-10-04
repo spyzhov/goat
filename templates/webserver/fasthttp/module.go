@@ -12,19 +12,35 @@ func New() *templates.Template {
 
 		Environments: []*templates.Environment{},
 		Properties: []*templates.Property{
-			{Name: "Http", Type: "*fasthttp.Server", Default: `&fasthttp.Server{
-			DisableKeepalive: true,
-			LogAllErrors:     true,
-			Logger:           &Logger{logger: logger.Named("fasthttp")},
-		}`},
+			{Name: "Http", Type: "*fasthttp.Server"},
 		},
 		Libraries: []*templates.Library{
 			{Name: "github.com/valyala/fasthttp", Version: "v1.2.0"},
 		},
 		Models: map[string]string{},
 
-		TemplateSetter:         templates.BlankFunction,
-		TemplateSetterFunction: templates.BlankFunction,
+		TemplateSetter: func(config *templates.Config) (s string) {
+			s = `
+	if err = app.setFastHTTP(); err != nil {
+		app.Logger.Error("cannot create fasthttp.Server", zap.Error(err))
+		return nil, err
+	}`
+			return
+		},
+		TemplateSetterFunction: func(config *templates.Config) (s string) {
+			s = `
+// create fasthttp.Server
+func (app *Application) setFastHTTP() (err error) {
+	app.Logger.Debug("FastHTTP init")
+	app.Http = &fasthttp.Server{
+		DisableKeepalive: true,
+		LogAllErrors:     true,
+		Logger:           &Logger{logger: app.Logger.Named("fasthttp")},
+	}
+	return
+}`
+			return
+		},
 		TemplateRunFunction: func(config *templates.Config) (s string) {
 			s = `	// Run FastHTTP server
 	if err := app.RunFastHttp(); err != nil {
