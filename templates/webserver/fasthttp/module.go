@@ -94,7 +94,7 @@ func (app *Application) fastHttpHandler(ctx *fasthttp.RequestCtx) {
 	case "/favicon.ico":
 		setStatusCode(ctx, http.StatusNoContent)
 	case "/healthcheck":
-		app.healthCheck(ctx)
+		app.fastHealthCheck(ctx)
 	case "/info":
 		app.serviceInfo(ctx)` + templates.Str(prom, `
 	case "/metrics":
@@ -114,7 +114,7 @@ func (app *Application) defaultHttpHandler(ctx *fasthttp.RequestCtx) {
 	setStatusCode(ctx, http.StatusNotImplemented)
 }
 
-func (app *Application) healthCheck(ctx *fasthttp.RequestCtx) {
+func (app *Application) fastHealthCheck(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json")
 	info, status := app.healthCheck()
 	err := json.NewEncoder(ctx).Encode(info)
