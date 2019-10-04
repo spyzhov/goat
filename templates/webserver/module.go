@@ -91,6 +91,18 @@ func (app *Application) healthCheck() (info map[string]string, status int) {
 			}
 			return "OK"
 		})(),`, "") + `
+` + templates.Str(config.IsEnabled("redis"), `
+
+		"redis": (func() string {
+			conn := app.Redis.Get()
+			defer app.Closer(conn, "Redis connection")
+			_, err := conn.Do("PING")
+			if err != nil {
+				status = http.StatusInternalServerError
+				return err.Error()
+			}
+			return "OK"
+		})(),`, "") + `
 	}
 
 	return info, status
