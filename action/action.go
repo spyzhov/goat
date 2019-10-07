@@ -5,6 +5,9 @@ import (
 	"github.com/spyzhov/goat/console"
 	"github.com/spyzhov/goat/templates"
 	"github.com/spyzhov/goat/templates/aws_lambda"
+	"golang.org/x/tools/imports"
+	"io/ioutil"
+
 	// "github.com/spyzhov/goat/templates/clickhouse"
 	// chMigrations "github.com/spyzhov/goat/templates/clickhouse/migrations"
 	consoleTpl "github.com/spyzhov/goat/templates/console"
@@ -204,7 +207,7 @@ func (a *Action) Invoke() (err error) {
 	}
 
 	for name, tpl := range files {
-		fileName := a.Path + "/" + name
+		fileName := filepath.Join(a.Path, name)
 		a.log("Process file: %s", name)
 		if err := os.MkdirAll(filepath.Dir(fileName), 0755); err != nil {
 			log.Fatal(err)
@@ -221,6 +224,7 @@ func (a *Action) Invoke() (err error) {
 		if err1 != nil {
 			log.Fatal(err1)
 		}
+		pretty(fileName)
 	}
 
 	if _, err = a.Console.Print(console.Wrap("Done!", console.OkGreen)); err != nil {
@@ -230,6 +234,31 @@ func (a *Action) Invoke() (err error) {
 		log.Fatal(err)
 	}
 	return
+}
+
+func pretty(fileName string) {
+	if fileName[len(fileName)-3:] != ".go" {
+		return
+	}
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		log.Fatal("ioutil.ReadFile", err)
+	}
+	result, err := imports.Process(fileName, data, &imports.Options{
+		Fragment:   false,
+		AllErrors:  true,
+		Comments:   true,
+		TabIndent:  true,
+		TabWidth:   8,
+		FormatOnly: true,
+	})
+	if err != nil {
+		log.Fatal("imports.Process", err)
+	}
+	err = ioutil.WriteFile(fileName, result, 0666)
+	if err != nil {
+		log.Fatal("ioutil.WriteFile", err)
+	}
 }
 
 func render(name, tpl string, obj interface{}) string {
