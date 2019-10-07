@@ -19,7 +19,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.migrateClickHouse(); err != nil {
-		logger.Panic("cannot migrate on ClickHouse", zap.Error(err))
+		app.Logger.Error("cannot migrate on ClickHouse", zap.Error(err))
 		return nil, err
 	}`
 			return
@@ -42,8 +42,8 @@ func (app *Application) migrateClickHouse() error {
 
 import (
 	"database/sql"
-	"github.com/golang-migrate/migrate"
-	"github.com/golang-migrate/migrate/database/clickhouse"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/clickhouse"
 	_ "github.com/kshvakov/clickhouse"
 	_ "{{.Repo}}/migrations/source/packr"
 	"go.uber.org/zap"
@@ -89,8 +89,8 @@ func ClickHouse(db *sql.DB, logger *zap.Logger) error {
 
 import (
 	"fmt"
-	"github.com/gobuffalo/packr"
-	"github.com/golang-migrate/migrate/source"
+	"github.com/gobuffalo/packr/v2"
+	"github.com/golang-migrate/migrate/v4/source"
 	"io"
 	nurl "net/url"
 	"os"
@@ -114,12 +114,12 @@ func (p *Packr) Open(url string) (source.Driver, error) {
 	}
 
 	// Packr MUST get const string
-	box := packr.NewBox("../../clickhouse")
+	box := packr.New("clickhouse", "../../clickhouse")
 
 	nf := &Packr{
 		url:        url,
 		path:       box.Path,
-		box:        &box,
+		box:        box,
 		migrations: source.NewMigrations(),
 	}
 
@@ -188,8 +188,8 @@ func (p *Packr) ReadDown(version uint) (r io.ReadCloser, identifier string, err 
 	return nil, "", &os.PathError{Op: fmt.Sprintf("read version %v", version), Path: p.path, Err: os.ErrNotExist}
 }
 `,
-				"migrations/clickhouse/1-init.up.sql":   `SELECT NOW();`,
-				"migrations/clickhouse/1-init.down.sql": `SELECT NOW();`,
+				"migrations/clickhouse/1_init.up.sql":   `SELECT NOW();`,
+				"migrations/clickhouse/1_init.down.sql": `SELECT NOW();`,
 			}
 			return
 		},

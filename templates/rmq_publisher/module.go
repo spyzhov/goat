@@ -32,7 +32,7 @@ type RabbitMq struct {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.setPublisher(&app.Publisher, app.Config.PublisherAddress); err != nil {
-		logger.Panic("cannot connect to publisher RabbitMQ", zap.Error(err))
+		app.Logger.Error("cannot connect to publisher RabbitMQ", zap.Error(err))
 		return nil, err
 	}`
 			return

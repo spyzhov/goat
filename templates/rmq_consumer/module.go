@@ -4,9 +4,10 @@ import "github.com/spyzhov/goat/templates"
 
 func New() *templates.Template {
 	return &templates.Template{
-		ID:      "rmq_consumer",
-		Name:    "RMQ-consumer",
-		Package: "github.com/streadway/amqp",
+		ID:        "rmq_consumer",
+		Name:      "RMQ-consumer",
+		Package:   "github.com/streadway/amqp",
+		Conflicts: []string{"aws_lambda"},
 
 		Environments: []*templates.Environment{
 			{Name: "ConsumerAddress", Type: "string", Env: "CONSUMER_ADDR", Default: "amqp://guest:guest@localhost:5672"},
@@ -33,7 +34,7 @@ type RabbitMq struct {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.setConsumer(&app.Consumer, app.Config.ConsumerAddress, app.Config.ConsumerExchange, app.Config.ConsumerQueue, app.Config.ConsumerRoutingKey); err != nil {
-		logger.Panic("cannot connect to consumer RabbitMQ", zap.Error(err))
+		app.Logger.Error("cannot connect to consumer RabbitMQ", zap.Error(err))
 		return nil, err
 	}`
 			return

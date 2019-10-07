@@ -19,7 +19,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.migrateMySQL(); err != nil {
-		logger.Panic("cannot migrate on MySQL", zap.Error(err))
+		app.Logger.Error("cannot migrate on MySQL", zap.Error(err))
 		return nil, err
 	}`
 			return
@@ -42,19 +42,24 @@ func (app *Application) migrateMySQL() error {
 
 import (
 	"database/sql"
-	"github.com/gobuffalo/packr"
+	"github.com/gobuffalo/packr/v2"
 	"github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
+	"strings"
 )
 
 func MySQL(db *sql.DB, logger *zap.Logger) error {
 	migrate.SetTable("_{{.Name}}_migrations")
 	migrations := &migrate.PackrMigrationSource{
-		Box: packr.NewBox("./mysql"),
+		Box: packr.New("mysql", "./mysql"),
 	}
 	logger.Debug("MySQL migrations: start")
 	n, err := migrate.Exec(db, "mysql", migrations, migrate.Up)
 	if err != nil {
+		if strings.HasSuffix(err.Error(), "unknown migration in database") {
+			logger.Warn("MySQL migrations: SKIPPED", zap.Error(err))
+			return nil
+		}
 		return err
 	}
 

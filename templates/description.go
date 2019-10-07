@@ -11,16 +11,20 @@ func New() *Template {
 			{Name: "Debug", Type: "bool", Env: "DEBUG"},
 		},
 		Properties: []*Property{
-			{Name: "Logger", Type: "*zap.Logger", Default: "logger"},
-			{Name: "Config", Type: "*Config", Default: "config"},
+			{Name: "Logger", Type: "*zap.Logger"},
+			{Name: "Config", Type: "*Config"},
 			{Name: "Error", Type: "chan error", Default: "make(chan error, math.MaxUint8)"},
 			{Name: "Ctx", Type: "context.Context"},
 			{Name: "ctxCancel", Type: "context.CancelFunc"},
 			{Name: "WaitGroup", Type: "*sync.WaitGroup", Default: "new(sync.WaitGroup)"},
+			{Name: "Info", Type: "*BuildInfo", Default: `&BuildInfo{
+			Version: Version,
+			Created: Created,
+			Commit:  Commit,
+		}`},
 		},
 		Libraries: []*Library{
-			{Name: "go.uber.org/zap", Version: "^1.9.1"},
-			{Name: "{{.Repo}}/signals"},
+			{Name: "go.uber.org/zap", Version: "v1.10.0"},
 			{Name: "math"},
 			{Name: "io"},
 			{Name: "context"},
@@ -35,6 +39,7 @@ func New() *Template {
 		TemplateClosers:        BlankFunction,
 
 		Templates: func(config *Config) (strings map[string]string) {
+			q := "`"
 			strings = map[string]string{
 				"main.go": `package main
 
@@ -53,18 +58,56 @@ func main() {
 `,
 				"app/config.go": `package app
 
-import (
-	"github.com/caarlos0/env"
+import (` + Str(config.IsEnabled("console_blank"), `
+	"flag"`, Str(config.IsEnabled("cobra"), `
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"os"`, "")) + `
+	"github.com/caarlos0/env/v6"
 )
 
 type Config struct {
 {{.Env}}
 }
+` + Str(config.IsEnabled("console_blank"), `
+func NewConfig() (cfg *Config, err error) {
+	cfg = new(Config)
+	if err = env.Parse(cfg); err != nil {
+		return nil, err
+	}
+	return FlagsConfig(cfg)
+}
 
+func FlagsConfig(cfg *Config) (*Config, error) {
+{{.Flags}}
+	flag.Parse()
+{{.FlagsEnv}}
+	return cfg, nil
+}`, Str(config.IsEnabled("cobra"), `
+func NewConfig(cmd *cobra.Command) (cfg *Config, err error) {
+	cfg = new(Config)
+	if err = env.Parse(cfg); err != nil {
+		return nil, err
+	}
+	return FlagsConfig(cmd, cfg)
+}
+
+func FlagsConfig(cmd *cobra.Command, cfg *Config) (*Config, error) {
+// region System flags
+	cmd.PersistentFlags().StringVarP(&cfg.Level, "log-level", "l", cfg.Level, "Log level for current run")
+	cmd.PersistentFlags().Init(os.Args[0], pflag.ContinueOnError)
+	_ = cmd.PersistentFlags().Parse(os.Args[1:])
+	cmd.PersistentFlags().Init(os.Args[0], pflag.PanicOnError)
+// endregion
+
+{{.Flags}}
+
+	return cfg, nil
+}`, `
 func NewConfig() (cfg *Config, err error) {
 	cfg = new(Config)
 	return cfg, env.Parse(cfg)
-}
+}`)) + `
 `,
 				"app/logger.go": `package app
 
@@ -77,19 +120,25 @@ type Logger struct {
 	logger *zap.Logger
 }
 
-func NewLogger(level string) (*zap.Logger, error) {
+func NewLogger(level string) (logger *zap.Logger, err error) {
 	cfg := zap.NewProductionConfig()
 	cfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
 
 	atom := zap.NewAtomicLevel()
-	err := atom.UnmarshalText([]byte(level))
+	err = atom.UnmarshalText([]byte(level))
 	if err != nil {
 		return nil, err
 	}
 
 	cfg.Level = atom
 
-	return cfg.Build()
+	logger, err = cfg.Build()
+	if err != nil {
+		return nil, err
+	}
+	zap.ReplaceGlobals(logger)
+
+	return logger, err
 }
 
 func (l *Logger) Printf(format string, args ...interface{}) {
@@ -106,47 +155,62 @@ import (
 {{.Repos}}
 )
 
+var (
+	Version = "unknown"
+	Commit  = "unknown"
+	Created = "unknown"
+)
+
 type Application struct {
 {{.Props}}
 }
+
+type BuildInfo struct {
+	Version string ` + q + `json:"version"` + q + `
+	Created string ` + q + `json:"created"` + q + `
+	Commit  string ` + q + `json:"commit"` + q + `
+}
 {{.Models}}
 
-func New() (*Application, error) {
-	config, err := NewConfig()
-	if err != nil {
-		return nil, err
-	}
-	logger, err := NewLogger(config.Level)
-	if err != nil {
-		return nil, err
-	}
-	logger.Debug("debug mode on")
-
-	app := &Application{
+func New() (app *Application, err error) {
+	app = &Application{
 {{.PropsValue}}
 	}
+
 	app.Ctx, app.ctxCancel = context.WithCancel(context.Background())
 	defer func() {
 		if err != nil {
 			app.Close()
 		}
 	}()
+` + Str(config.IsEnabled("cobra"), `
+	if err = app.InitCommands(); err != nil {
+		return
+	}`, ``) + `
+	app.Config, err = NewConfig(` + Str(config.IsEnabled("cobra"), `app.Command`, ``) + `)
+	if err != nil {
+		return nil, err
+	}
+	app.Logger, err = NewLogger(app.Config.Level)
+	if err != nil {
+		return nil, err
+	}
+	app.Logger.Debug("debug mode on")
 {{.Setter}}
-
 	return app, nil
 }
 
 func (app *Application) Close() {
-	app.Logger.Debug("Application stops")
+	if app.Logger != nil {
+		app.Logger.Debug("Application stops")
+	}
 {{.Closers}}
 }
 
 func (app *Application) Start() {
 	defer app.Stop()
-
-{{.Runners}}
+{{.Runners -}}
 {{- if eq .ServiceType "lambda"}}
-
 	lambda.Start(app.Lambda)
 {{- else}}
 
@@ -154,8 +218,8 @@ func (app *Application) Start() {
 	case err := <-app.Error:
 		app.Logger.Panic("service crashed", zap.Error(err))
 	case <-app.Ctx.Done():
-		app.Logger.Error("service stops via context")
-	case sig := <-signals.WaitExit():
+		app.Logger.Info("service stops via context")
+	case sig := <-WaitExit():
 		app.Logger.Info("service stop", zap.Stringer("signal", sig))
 	} {{- end}}
 }
@@ -192,7 +256,7 @@ func (app *Application) Closer(closer io.Closer, scope string) {
 }
 {{.SetterFunction}}
 `,
-				"signals/signals.go": `package signals
+				"app/signals.go": `package app
 
 import (
 	"os"
@@ -215,16 +279,31 @@ WORKDIR /usr/share/zoneinfo
 # tz loader doesn't handle compressed data.
 RUN zip -r -0 /zoneinfo.zip .
 
-FROM golang:1.12 AS builder
+FROM golang:1.13 AS builder
+ENV GO111MODULE=on
+
+ARG APP_VERSION=Unknown
+ARG APP_COMMIT=Unknown
+ARG APP_CREATED=Unknown
+
 # build via packr hard way https://github.com/gobuffalo/packr#building-a-binary-the-hard-way
-RUN go get -u github.com/gobuffalo/packr/... && \
-	go get -u github.com/golang/dep/cmd/dep
+RUN go get -u github.com/gobuffalo/packr/v2/packr2
 WORKDIR /go/src/{{.Repo}}
-ADD . .
-RUN dep ensure && \
-	packr && \
-	CGO_ENABLED=0 GOOS=linux go build -o /go/bin/{{.Name}} . && \
-	packr clean
+COPY . .
+
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+
+RUN go mod download && \
+	packr2 && \
+	go build \
+	    -ldflags "\
+	        -X {{.Repo}}/app.Version=${APP_VERSION} \
+	        -X {{.Repo}}/app.Commit=${APP_COMMIT} \
+	        -X {{.Repo}}/app.Created=${APP_CREATED} \
+	    " \
+	    -o /go/bin/{{.Name}} . && \
+	packr2 clean
 
 FROM busybox:latest
 # configurations
@@ -250,39 +329,42 @@ type Config struct {
 {{.Env}}
 }
 {{.MdCode}}
+
+# Build
+
+## Golang
+
+{{.MdCode}}bash
+APP_VERSION=` + q + `git tag --contains $(git rev-parse HEAD)` + q + `
+APP_COMMIT=` + q + `git rev-parse --short HEAD` + q + `
+APP_CREATED=` + q + `date '+%Y-%m-%dT%H:%M:%SZ%Z'` + q + `
+
+go build \
+    -ldflags "\
+        -w \
+        -X {{.Repo}}/app.Version=${APP_VERSION} \
+        -X {{.Repo}}/app.Commit=${APP_COMMIT} \
+        -X {{.Repo}}/app.Created=${APP_CREATED} \
+    " .
+{{.MdCode}}
+
+## Docker
+
+{{.MdCode}}bash
+    docker build \
+        --build-arg APP_VERSION=` + q + `git tag --contains $(git rev-parse HEAD)` + q + ` \
+        --build-arg APP_COMMIT=` + q + `git rev-parse --short HEAD` + q + ` \
+        --build-arg APP_CREATED=` + q + `date '+%Y-%m-%dT%H:%M:%SZ%Z'` + q + ` \
+        -t {{.Name}} .
+{{.MdCode}}
 `,
-				"Gopkg.toml": `# Gopkg.toml example
-#
-# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
-# for detailed Gopkg.toml documentation.
-#
-# required = ["github.com/user/thing/cmd/thing"]
-# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
-#
-# [[constraint]]
-#   name = "github.com/user/project"
-#   version = "1.0.0"
-#
-# [[constraint]]
-#   name = "github.com/user/project2"
-#   branch = "dev"
-#   source = "github.com/myfork/project2"
-#
-# [[override]]
-#   name = "github.com/x/y"
-#   version = "2.4.0"
-#
-# [prune]
-#   non-go = false
-#   go-tests = true
-#   unused-packages = true
+				"go.mod": `module {{.Repo}}
 
+go 1.12
 
-[prune]
-  go-tests = true
-  unused-packages = true
-
-{{.DepLibs}}
+require (
+	{{.GoMods}}
+)
 `,
 			}
 			return

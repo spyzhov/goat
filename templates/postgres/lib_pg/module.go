@@ -14,7 +14,7 @@ func New() *templates.Template {
 			{Name: "Postgres", Type: "*sql.DB"},
 		},
 		Libraries: []*templates.Library{
-			{Name: "github.com/lib/pq", Alias: "_", Version: "^1.0.0"},
+			{Name: "github.com/lib/pq", Alias: "_", Version: "v1.0.0"},
 			{Name: "database/sql"},
 		},
 		Models: map[string]string{},
@@ -22,7 +22,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.setDataBasePostgres(); err != nil {
-		logger.Panic("cannot connect to Postgres", zap.Error(err))
+		app.Logger.Error("cannot connect to Postgres", zap.Error(err))
 		return nil, err
 	}`
 			return

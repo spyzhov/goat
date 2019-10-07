@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spyzhov/goat/console"
 	"sort"
+	"strings"
 )
 
 type Config struct {
@@ -32,10 +33,12 @@ type Template struct {
 }
 
 type Environment struct {
-	Name    string
-	Type    string
-	Env     string
-	Default string
+	Name        string
+	Type        string
+	Env         string
+	Default     string
+	Flag        string
+	Description string
 }
 
 type Property struct {
@@ -49,7 +52,6 @@ type Library struct {
 	Alias   string
 	Repo    string
 	Version string
-	Branch  string
 }
 
 type (
@@ -64,11 +66,11 @@ type (
 	TemplateFiles           map[string]string
 )
 
-func BlankFunction(*Config) string {
+func BlankFunction(_ *Config) string {
 	return ""
 }
 
-func BlankFunctionMap(*Config) map[string]string {
+func BlankFunctionMap(_ *Config) map[string]string {
 	return map[string]string{}
 }
 
@@ -267,6 +269,62 @@ func (env Environments) String() string {
 	return join(parts, "\n")
 }
 
+func (env Environments) Flags() string {
+	parts := make([]string, 0, len(env))
+	tpl := `	var %s = flag.%s("%s", cfg.%s, "%s")`
+	for _, e := range env {
+		parts = append(parts, fmt.Sprintf(tpl, e.FlagVar(), e.FlagType(), e.FlagName(), e.Name, e.FlagDescription()))
+	}
+	return join(parts, "\n")
+}
+
+func (env Environments) CobraFlags() string {
+	parts := make([]string, 0, len(env))
+	tpl := `	cmd.PersistentFlags().%sVarP(&cfg.%s, "%s", "", cfg.%s, "%s")`
+	for _, e := range env {
+		if e.Env != "LOG_LEVEL" {
+			parts = append(parts, fmt.Sprintf(tpl, e.FlagType(), e.Name, e.FlagName(), e.Name, e.FlagDescription()))
+		}
+	}
+	return join(parts, "\n")
+}
+
+func (env Environments) FlagsEnv() string {
+	parts := make([]string, 0, len(env))
+	tpl := `	cfg.%s = *%s`
+	for _, e := range env {
+		parts = append(parts, fmt.Sprintf(tpl, e.Name, e.FlagVar()))
+	}
+	return join(parts, "\n")
+}
+
+//endregion
+//region Environment
+
+func (e Environment) FlagName() string {
+	result := e.Flag
+	if result == "" {
+		result = strings.ToLower(e.Env)
+		result = strings.ReplaceAll(result, "_", "-")
+	}
+	return result
+}
+
+func (e Environment) FlagType() string {
+	return strings.ToUpper(e.Type[0:1]) + e.Type[1:]
+}
+
+func (e Environment) FlagVar() string {
+	return strings.ToLower(e.Name[0:1]) + e.Name[1:]
+}
+
+func (e Environment) FlagDescription() string {
+	if e.Description == "" {
+		return "flag for ENV:" + e.Env
+	}
+	return e.Description
+}
+
 //endregion
 //region Properties
 func (props Properties) String() string {
@@ -324,25 +382,18 @@ func (libs Libraries) Interface() []interface{} {
 	return result
 }
 
-func (libs Libraries) Dep() string {
+func (libs Libraries) GoMod() string {
 	parts := make([]string, 0, len(libs))
 	for _, l := range libs {
-		if l.Version != "" || l.Branch != "" {
+		if l.Version != "" {
 			repo := l.Repo
-			bound, version := "version", l.Version
 			if repo == "" {
 				repo = l.Name
 			}
-			if version == "" {
-				bound, version = "branch", l.Branch
-			}
-			parts = append(parts, `[[constraint]]
-  name = "`+repo+`"
-  `+bound+` = "`+version+`"
-`)
+			parts = append(parts, repo+" "+l.Version)
 		}
 	}
-	return join(parts, "\n")
+	return join(parts, "\n\t")
 }
 
 //endregion

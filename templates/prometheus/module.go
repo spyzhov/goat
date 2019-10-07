@@ -12,15 +12,15 @@ func New() *templates.Template {
 		Environments: []*templates.Environment{},
 		Properties:   []*templates.Property{},
 		Libraries: []*templates.Library{
-			{Name: "github.com/prometheus/client_golang/prometheus/promhttp", Repo: "github.com/prometheus/client_golang", Version: "^0.9.2"},
+			{Name: "github.com/prometheus/client_golang/prometheus/promhttp", Repo: "github.com/prometheus/client_golang", Version: "v0.9.4"},
 		},
 		Models: map[string]string{},
 
 		TemplateSetter: func(config *templates.Config) (s string) {
-			if config.IsEnabled("http") {
+			if config.IsEnabled("http") || config.IsEnabled("httprouter") {
 				s = `
 	if err = app.setPrometheus(); err != nil {
-		logger.Panic("cannot register Prometheus", zap.Error(err))
+		app.Logger.Error("cannot register Prometheus", zap.Error(err))
 		return nil, err
 	}`
 			}
@@ -33,6 +33,14 @@ func New() *templates.Template {
 func (app *Application) setPrometheus() error {
 	app.Logger.Debug("Prometheus registered")
 	app.Http.Handle("/metrics", promhttp.Handler())
+	return nil
+}`
+			} else if config.IsEnabled("httprouter") {
+				s = `
+// Set metrics
+func (app *Application) setPrometheus() error {
+	app.Logger.Debug("Prometheus registered")
+	app.Router.Handler("GET", "/metrics", promhttp.Handler())
 	return nil
 }`
 			}

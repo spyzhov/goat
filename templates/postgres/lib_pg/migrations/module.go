@@ -19,7 +19,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.migratePostgres(); err != nil {
-		logger.Panic("cannot migrate on Postgres", zap.Error(err))
+		app.Logger.Error("cannot migrate on Postgres", zap.Error(err))
 		return nil, err
 	}`
 			return
@@ -42,20 +42,25 @@ func (app *Application) migratePostgres() error {
 
 import (
 	"database/sql"
-	"github.com/gobuffalo/packr"
+	"github.com/gobuffalo/packr/v2"
 	_ "github.com/lib/pq"
 	"github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
+	"strings"
 )
 
 func Postgres(db *sql.DB, logger *zap.Logger) error {
 	migrate.SetTable("_{{.Name}}_migrations")
 	migrations := &migrate.PackrMigrationSource{
-		Box: packr.NewBox("./postgres"),
+		Box: packr.New("postgres", "./postgres"),
 	}
 	logger.Debug("Postgres migrations: start")
 	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
 	if err != nil {
+		if strings.HasSuffix(err.Error(), "unknown migration in database") {
+			logger.Warn("Postgres migrations: SKIPPED", zap.Error(err))
+			return nil
+		}
 		return err
 	}
 

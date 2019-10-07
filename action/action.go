@@ -5,8 +5,12 @@ import (
 	"github.com/spyzhov/goat/console"
 	"github.com/spyzhov/goat/templates"
 	"github.com/spyzhov/goat/templates/aws_lambda"
-	"github.com/spyzhov/goat/templates/clickhouse"
-	chMigrations "github.com/spyzhov/goat/templates/clickhouse/migrations"
+	"golang.org/x/tools/imports"
+	"io/ioutil"
+
+	// "github.com/spyzhov/goat/templates/clickhouse"
+	// chMigrations "github.com/spyzhov/goat/templates/clickhouse/migrations"
+	consoleTpl "github.com/spyzhov/goat/templates/console"
 	"github.com/spyzhov/goat/templates/mysql"
 	myMigrations "github.com/spyzhov/goat/templates/mysql/migrations"
 	"github.com/spyzhov/goat/templates/postgres"
@@ -47,16 +51,19 @@ type Context struct {
 	Props          string
 	PropsValue     string
 	Models         string
-	DepLibs        string
+	GoMods         string
 	MdCode         string
 	ServiceType    ServiceType
+	Flags          string
+	FlagsEnv       string
 }
 
 type ServiceType string
 
 const (
-	DaemonServiceType ServiceType = "daemon"
-	LambdaServiceType ServiceType = "lambda"
+	DaemonServiceType  ServiceType = "daemon"
+	LambdaServiceType  ServiceType = "lambda"
+	ConsoleServiceType ServiceType = "console"
 )
 
 var (
@@ -188,9 +195,11 @@ func (a *Action) Invoke() (err error) {
 		Props:          a.getProperties(),
 		PropsValue:     a.getPropertiesValue(),
 		Models:         a.getModels(),
-		DepLibs:        a.getDepLibraries(),
+		GoMods:         a.getGoModLibraries(),
 		MdCode:         "```",
 		ServiceType:    a.getServiceType(),
+		Flags:          a.getFlags(),
+		FlagsEnv:       a.getFlagsEnv(),
 	}
 	files := make(map[string]*template.Template)
 	for name, content := range a.getTemplateFiles() {
@@ -198,7 +207,7 @@ func (a *Action) Invoke() (err error) {
 	}
 
 	for name, tpl := range files {
-		fileName := a.Path + "/" + name
+		fileName := filepath.Join(a.Path, name)
 		a.log("Process file: %s", name)
 		if err := os.MkdirAll(filepath.Dir(fileName), 0755); err != nil {
 			log.Fatal(err)
@@ -215,15 +224,41 @@ func (a *Action) Invoke() (err error) {
 		if err1 != nil {
 			log.Fatal(err1)
 		}
+		pretty(fileName)
 	}
 
 	if _, err = a.Console.Print(console.Wrap("Done!", console.OkGreen)); err != nil {
 		log.Fatal(err)
 	}
-	if _, err = a.Console.Print("Don't forget to run: %s", console.Wrap("dep ensure", console.Bold)); err != nil {
+	if _, err = a.Console.Print("Don't forget to run: %s", console.Wrap("go mod tidy", console.Bold)); err != nil {
 		log.Fatal(err)
 	}
 	return
+}
+
+func pretty(fileName string) {
+	if fileName[len(fileName)-3:] != ".go" {
+		return
+	}
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		log.Fatal("ioutil.ReadFile", err)
+	}
+	result, err := imports.Process(fileName, data, &imports.Options{
+		Fragment:   false,
+		AllErrors:  true,
+		Comments:   true,
+		TabIndent:  true,
+		TabWidth:   8,
+		FormatOnly: true,
+	})
+	if err != nil {
+		log.Fatal("imports.Process", err)
+	}
+	err = ioutil.WriteFile(fileName, result, 0666)
+	if err != nil {
+		log.Fatal("ioutil.WriteFile", err)
+	}
 }
 
 func render(name, tpl string, obj interface{}) string {
@@ -248,6 +283,8 @@ func (a *Action) getConfig() *templates.Config {
 			webserver.New(),
 			prometheus.New(),
 
+			consoleTpl.New(),
+
 			redis.New(),
 
 			postgres.New(),
@@ -257,8 +294,9 @@ func (a *Action) getConfig() *templates.Config {
 			mysql.New(),
 			myMigrations.New(),
 
-			clickhouse.New(),
-			chMigrations.New(),
+			// FIXME:
+			// clickhouse.New(),
+			// chMigrations.New(),
 
 			rmq_consumer.New(),
 			rmq_publisher.New(),
@@ -272,6 +310,19 @@ func (a *Action) getConfig() *templates.Config {
 func (a *Action) getEnvironments() string {
 	a.log("env: start")
 	return a.Config.Environments().String()
+}
+
+func (a *Action) getFlags() string {
+	a.log("flags: start")
+	if a.Config.IsEnabled("cobra") {
+		return a.Config.Environments().CobraFlags()
+	}
+	return a.Config.Environments().Flags()
+}
+
+func (a *Action) getFlagsEnv() string {
+	a.log("flags-env: start")
+	return a.Config.Environments().FlagsEnv()
 }
 
 func (a *Action) getProperties() string {
@@ -302,9 +353,9 @@ func (a *Action) getLibraries() string {
 	return libs.String()
 }
 
-func (a *Action) getDepLibraries() string {
-	a.log("dep-lib: start")
-	return a.Config.Libraries().Dep()
+func (a *Action) getGoModLibraries() string {
+	a.log("go-mod: start")
+	return a.Config.Libraries().GoMod()
 }
 
 func (a *Action) getServiceType() (serviceType ServiceType) {
@@ -313,6 +364,8 @@ func (a *Action) getServiceType() (serviceType ServiceType) {
 	for _, pkg := range a.Config.Install {
 		if pkg.ID == "aws_lambda" {
 			serviceType = LambdaServiceType
+		} else if pkg.ID == "console" {
+			serviceType = ConsoleServiceType
 		}
 	}
 	return

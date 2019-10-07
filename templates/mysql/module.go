@@ -15,7 +15,7 @@ func New() *templates.Template {
 			{Name: "MySQL", Type: "*sql.DB"},
 		},
 		Libraries: []*templates.Library{
-			{Name: "github.com/go-sql-driver/mysql", Alias: "_", Version: "^1.4.1"},
+			{Name: "github.com/go-sql-driver/mysql", Alias: "_", Version: "v1.4.1"},
 			{Name: "database/sql"},
 		},
 		Models: map[string]string{},
@@ -23,7 +23,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.setDataBaseMySQL(); err != nil {
-		logger.Panic("cannot connect to MySQL", zap.Error(err))
+		app.Logger.Error("cannot connect to MySQL", zap.Error(err))
 		return nil, err
 	}`
 			return

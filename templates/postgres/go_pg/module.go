@@ -5,7 +5,7 @@ import "github.com/spyzhov/goat/templates"
 func New() *templates.Template {
 	return &templates.Template{
 		ID:           "go-postgres",
-		Name:         "Postgres connection",
+		Name:         "Postgres connection ORM",
 		Package:      "github.com/go-pg",
 		Dependencies: []string{"postgres"},
 
@@ -14,14 +14,14 @@ func New() *templates.Template {
 			{Name: "Postgres", Type: "*pg.DB"},
 		},
 		Libraries: []*templates.Library{
-			{Name: "github.com/go-pg/pg", Version: "^7.1.0"},
+			{Name: "github.com/go-pg/pg", Version: "v7.1.0"},
 		},
 		Models: map[string]string{},
 
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.setDataBasePostgres(); err != nil {
-		logger.Panic("cannot connect to Postgres", zap.Error(err))
+		app.Logger.Error("cannot connect to Postgres", zap.Error(err))
 		return nil, err
 	}`
 			return

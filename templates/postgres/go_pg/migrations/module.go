@@ -19,7 +19,7 @@ func New() *templates.Template {
 		TemplateSetter: func(config *templates.Config) (s string) {
 			s = `
 	if err = app.migratePostgres(); err != nil {
-		logger.Panic("cannot migrate on Postgres", zap.Error(err))
+		app.Logger.Error("cannot migrate on Postgres", zap.Error(err))
 		return nil, err
 	}`
 			return
@@ -49,6 +49,12 @@ import (
 
 func Postgres(db *pg.DB, logger *zap.Logger) {
 	migrations.SetTableName("_{{.Name}}_migrations")
+	_, _, err := migrations.Run(db, "init")
+	if err != nil {
+		logger.Debug("Postgres migrations: initialized")
+	} else {
+		logger.Info("Postgres migrations: initialize")
+	}
 
 	oldVersion, newVersion, err := migrations.Run(db, "up")
 
